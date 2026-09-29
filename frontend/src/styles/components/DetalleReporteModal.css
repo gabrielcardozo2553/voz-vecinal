@@ -1,0 +1,78 @@
+.detalle-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+.detalle-contenido {
+  position: relative;
+  background-color: white;
+  border-radius: var(--radio-borde);
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.detalle-cerrar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: white;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detalle-foto {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+}
+
+.detalle-info {
+  padding: var(--espacio-medio);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detalle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detalle-direccion {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
+
+.detalle-descripcion {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.detalle-sin-mapa {
+  font-size: 0.85rem;
+  color: #999;
+  font-style: italic;
+  margin: 0;
+}

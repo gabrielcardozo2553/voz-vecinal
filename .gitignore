@@ -1,0 +1,21 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno (tienen claves y contraseñas)
+.env
+
+# Fotos subidas por los vecinos
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Build del frontend
+frontend/dist/
+
+# Backups de base de datos (pueden tener datos reales de usuarios)
+*.sql
+
+# Sistema, editor y logs
+.DS_Store
+Thumbs.db
+.vscode/
+*.log

@@ -1,0 +1,30 @@
+.nav {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--espacio-medio);
+}
+
+.nav a {
+  color: #cfe8ff;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 20px;
+  transition: background-color 0.2s;
+}
+
+.nav a:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.nav a.active {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+@media (max-width: 600px) {
+  .nav {
+    display: none;
+  }
+}
