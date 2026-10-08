@@ -5,8 +5,9 @@ import { useAuth } from '../context/AuthContext';
 import '../styles/pages/LoginPage.css';
 
 function LoginPage() {
-  const [modo, setModo] = useState('login'); 
+  const [modo, setModo] = useState('login');
   const [formData, setFormData] = useState({ nombre: '', apellido: '', dni: '', email: '', password: '' });
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [enviando, setEnviando] = useState(false);
 
@@ -14,18 +15,33 @@ function LoginPage() {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const valorLimpio = name === 'dni' ? value.replace(/\D/g, '') : value;
+    setFormData({ ...formData, [name]: valorLimpio });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setEnviando(true);
     setMensaje('');
+
+    if (modo === 'registro') {
+      if (!/^\d{7,8}$/.test(formData.dni)) {
+        setMensaje('El DNI debe tener 7 u 8 números, sin puntos.');
+        return;
+      }
+      if (!aceptaTerminos) {
+        setMensaje('Tenés que aceptar el uso de tus datos para registrarte.');
+        return;
+      }
+    }
+
+    setEnviando(true);
 
     try {
       if (modo === 'registro') {
-        await axios.post('http://localhost:3000/api/auth/registro', formData);
+        await axios.post('http://localhost:3000/api/auth/registro', { ...formData, aceptaTerminos });
         setMensaje('¡Registro exitoso! Ahora podés iniciar sesión.');
+        setAceptaTerminos(false);
         setModo('login');
       } else {
         const res = await axios.post('http://localhost:3000/api/auth/login', {
@@ -61,6 +77,8 @@ function LoginPage() {
               name="dni"
               value={formData.dni}
               onChange={handleChange}
+              inputMode="numeric"
+              maxLength={8}
               placeholder="Sin puntos, solo números"
               required
             />
@@ -72,6 +90,20 @@ function LoginPage() {
 
         <label>Contraseña:</label>
         <input type="password" name="password" value={formData.password} onChange={handleChange} required />
+
+        {modo === 'registro' && (
+          <label className="consentimiento">
+            <input
+              type="checkbox"
+              checked={aceptaTerminos}
+              onChange={(e) => setAceptaTerminos(e.target.checked)}
+            />
+            <span>
+              Acepto que mi nombre, apellido y DNI se usen para identificar mis reportes y gestionarlos
+              ante la Municipalidad. Solo el personal autorizado puede verlos.
+            </span>
+          </label>
+        )}
 
         <button type="submit" disabled={enviando}>
           {enviando ? 'Enviando...' : modo === 'login' ? 'Iniciar sesión' : 'Registrarse'}

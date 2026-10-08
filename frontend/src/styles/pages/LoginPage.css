@@ -62,3 +62,20 @@
   margin-top: var(--espacio-medio);
   padding: 0;
 }
+
+.login-page .consentimiento {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--color-texto-suave);
+  margin-bottom: 0;
+}
+
+.login-page .consentimiento input[type="checkbox"] {
+  width: auto;
+  margin-top: 3px;
+  padding: 0;
+  flex-shrink: 0;
+}
