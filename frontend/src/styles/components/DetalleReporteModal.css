@@ -1,38 +1,37 @@
 .detalle-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.75);
+  inset: 0;
+  background-color: rgba(11, 63, 74, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 200;
+  z-index: 2000;
   padding: 20px;
 }
 
 .detalle-contenido {
   position: relative;
-  background-color: white;
-  border-radius: var(--radio-borde);
-  max-width: 480px;
+  background-color: var(--color-fondo);
+  border-radius: 24px;
+  max-width: 500px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(11, 63, 74, 0.35);
 }
 
 .detalle-cerrar {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: white;
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
   border: none;
-  width: 32px;
-  height: 32px;
   border-radius: 50%;
+  background-color: white;
+  color: var(--color-primario-oscuro);
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(11, 63, 74, 0.3);
   z-index: 2;
   display: flex;
   align-items: center;
@@ -41,38 +40,167 @@
 
 .detalle-foto {
   width: 100%;
-  height: 220px;
+  height: 230px;
   object-fit: cover;
   display: block;
 }
 
+.detalle-sin-foto {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .detalle-info {
-  padding: var(--espacio-medio);
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
 }
 
 .detalle-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.detalle-direccion {
-  font-size: 0.9rem;
-  color: #666;
+.detalle-titulo {
   margin: 0;
+  font-size: 1.4rem;
+  line-height: 1.2;
+  color: var(--color-primario-oscuro);
 }
 
-.detalle-descripcion {
+.detalle-datos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detalle-datos p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
   font-size: 0.95rem;
+  color: var(--color-texto-suave);
+}
+
+.detalle-datos svg {
+  flex: none;
+  color: var(--color-primario);
+}
+
+/* ---------- Avance ---------- */
+
+.detalle-progreso {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
   margin: 0;
+  padding: 14px;
+  list-style: none;
+  background-color: white;
+  border: 1px solid #e4e0d3;
+  border-radius: 16px;
+}
+
+.progreso-paso {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-texto-suave);
+}
+
+.progreso-circulo {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid #c9d6d8;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.progreso-paso.hecho .progreso-circulo {
+  background-color: var(--color-primario);
+  border-color: var(--color-primario);
+  color: white;
+}
+
+.progreso-paso.actual .progreso-circulo {
+  background-color: var(--color-acento);
+  border-color: var(--color-acento);
+  color: var(--color-texto);
+}
+
+.progreso-paso.hecho .progreso-texto,
+.progreso-paso.actual .progreso-texto {
+  color: var(--color-texto);
+  font-weight: 600;
+}
+
+/* ---------- Mapa ---------- */
+
+.detalle-mapa-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detalle-mapa-bloque h4 {
+  margin: 0;
+  font-family: var(--fuente-texto);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-texto);
+}
+
+.detalle-enlace-mapa {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  min-height: 44px;
+  color: var(--color-primario);
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .detalle-sin-mapa {
-  font-size: 0.85rem;
-  color: #999;
-  font-style: italic;
   margin: 0;
+  padding: 14px;
+  border-radius: 12px;
+  background-color: white;
+  border: 1px dashed #b9ccd0;
+  font-size: 0.9rem;
+  color: var(--color-texto-suave);
+}
+
+.pin-reporte {
+  background: none;
+  border: 0;
+}
+
+@media (max-width: 600px) {
+  .detalle-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .detalle-contenido {
+    max-width: none;
+    max-height: 92vh;
+    border-radius: 24px 24px 0 0;
+  }
 }

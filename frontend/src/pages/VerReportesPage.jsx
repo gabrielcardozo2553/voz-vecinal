@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../styles/pages/VerReportesPage.css';
 import { iconoCategoria, colorCategoria } from '../utils/categorias';
-import { Inbox } from 'lucide-react';
+import { Inbox, MapPin, Calendar } from 'lucide-react';
+import { ESTADOS_TEXTO } from '../utils/estados';
 import Spinner from '../components/Spinner';
 import DetalleReporteModal from '../components/DetalleReporteModal';
 
@@ -20,11 +21,7 @@ function VerReportesPage() {
       .finally(() => setCargando(false));
   }, []);
 
-  const estadoTexto = {
-    pendiente: 'Pendiente',
-    en_proceso: 'En proceso',
-    resuelto: 'Resuelto'
-  };
+  const [filtroEstado, setFiltroEstado] = useState('todos');
 
   const mesAnioTexto = (fecha) => {
     const texto = new Date(fecha).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
@@ -35,23 +32,60 @@ function VerReportesPage() {
 
   const mesesDisponibles = [...new Set(reportes.map(r => mesAnioTexto(r.fecha_creacion)))];
 
-  const reportesFiltrados = filtroMes === 'todos'
+  const reportesDelMes = filtroMes === 'todos'
     ? reportes
     : reportes.filter(r => mesAnioTexto(r.fecha_creacion) === filtroMes);
+
+  const conteo = {
+    todos: reportesDelMes.length,
+    pendiente: reportesDelMes.filter(r => r.estado === 'pendiente').length,
+    en_proceso: reportesDelMes.filter(r => r.estado === 'en_proceso').length,
+    resuelto: reportesDelMes.filter(r => r.estado === 'resuelto').length,
+  };
+
+  const reportesFiltrados = filtroEstado === 'todos'
+    ? reportesDelMes
+    : reportesDelMes.filter(r => r.estado === filtroEstado);
 
   const reportesVisibles = reportesFiltrados.slice(0, cantidadVisible);
   const hayMasPorCargar = cantidadVisible < reportesFiltrados.length;
 
   return (
     <div className="ver-reportes-page">
-      <h2>Reportes del pueblo</h2>
-      <p className="ver-reportes-subtitulo">
-        Mirá los problemas que reportaron tus vecinos y cómo va su resolución.
-      </p>
+      <div className="ver-reportes-cabecera">
+        <h2>Reportes del pueblo</h2>
+        <p className="ver-reportes-subtitulo">
+          Mirá los problemas que reportaron tus vecinos y cómo va su resolución.
+        </p>
+      </div>
 
       {reportes.length > 0 && (
-        <div className="filtro-fecha-barra">
+        <div className="filtros-barra">
+          <div className="filtro-estados" role="group" aria-label="Filtrar por estado">
+            {[
+              ['todos', 'Todos'],
+              ['pendiente', 'Pendientes'],
+              ['en_proceso', 'En proceso'],
+              ['resuelto', 'Resueltos'],
+            ].map(([valor, texto]) => (
+              <button
+                type="button"
+                key={valor}
+                className={`filtro-chip filtro-${valor} ${filtroEstado === valor ? 'activo' : ''}`}
+                aria-pressed={filtroEstado === valor}
+                onClick={() => {
+                  setFiltroEstado(valor);
+                  setCantidadVisible(6);
+                }}
+              >
+                {texto}
+                <span className="filtro-conteo">{conteo[valor]}</span>
+              </button>
+            ))}
+          </div>
           <select
+            className="filtro-mes"
+            aria-label="Filtrar por mes"
             value={filtroMes}
             onChange={(e) => {
               setFiltroMes(e.target.value);
@@ -63,16 +97,13 @@ function VerReportesPage() {
               <option key={mes} value={mes}>{mes}</option>
             ))}
           </select>
-          <span className="contador-resultados">
-            {reportesFiltrados.length} {reportesFiltrados.length === 1 ? 'reporte' : 'reportes'}
-          </span>
         </div>
       )}
 
       {reportesFiltrados.length === 0 ? (
         <div className="estado-vacio">
           <Inbox size={40} strokeWidth={1.5} />
-          <p>{reportes.length === 0 ? 'Todavía no hay reportes cargados.' : 'No hay reportes en ese mes.'}</p>
+          <p>{reportes.length === 0 ? 'Todavía no hay reportes cargados.' : 'No hay reportes con ese filtro.'}</p>
           {reportes.length === 0 && <span>Sé el primero en reportar un problema de tu barrio.</span>}
         </div>
       ) : (
@@ -85,26 +116,41 @@ function VerReportesPage() {
                 <div
                   key={r.id}
                   className="reporte-card"
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setReporteSeleccionado(r)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setReporteSeleccionado(r);
+                    }
+                  }}
                 >
-                  {r.foto_url && (
-                    <img
-                      src={r.foto_url}
-                      alt="Foto del reporte"
-                      className="reporte-foto"
-                    />
-                  )}
+                  <div className="reporte-media">
+                    {r.foto_url ? (
+                      <img src={r.foto_url} alt="Foto del reporte" className="reporte-foto" />
+                    ) : (
+                      <div className={`reporte-foto reporte-sin-foto ${color}`}>
+                        <Icono size={40} strokeWidth={1.5} aria-hidden="true" />
+                      </div>
+                    )}
+                    <span className={`estado-pill estado-${r.estado}`}>
+                      <span className="estado-punto" />
+                      {ESTADOS_TEXTO[r.estado]}
+                    </span>
+                  </div>
                   <div className="reporte-info">
-                    <div className="reporte-header">
-                      <span className={`categoria-chip ${color}`}>
-                        <Icono size={15} strokeWidth={2} />
-                        {r.categoria}
-                      </span>
-                      <span className={`badge badge-${r.estado}`}>{estadoTexto[r.estado]}</span>
-                    </div>
-                    <p className="reporte-direccion">{r.direccion}</p>
+                    <span className={`categoria-chip ${color}`}>
+                      <Icono size={15} strokeWidth={2} aria-hidden="true" />
+                      {r.categoria}
+                    </span>
                     <p className="reporte-descripcion">{r.descripcion}</p>
+                    <p className="reporte-direccion">
+                      <MapPin size={15} aria-hidden="true" />
+                      {r.direccion}
+                    </p>
                     <span className="reporte-fecha">
+                      <Calendar size={14} aria-hidden="true" />
                       {new Date(r.fecha_creacion).toLocaleDateString('es-AR')}
                     </span>
                   </div>
