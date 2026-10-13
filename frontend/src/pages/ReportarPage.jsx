@@ -182,11 +182,13 @@ function ReportarPage() {
           <p className="reportar-subtitulo">Son tres pasos y tu reporte le llega directo a la Municipalidad.</p>
         </div>
         <svg className="hero-dibujo" width="92" height="72" viewBox="0 0 92 72" aria-hidden="true">
-          <circle cx="46" cy="42" r="22" fill="#f2b134" />
-          <g stroke="#f2b134" strokeWidth="3" strokeLinecap="round"><path d="M46 8v7M18 18l5 5M74 18l-5 5M8 42h7M77 42h7" /></g>
-          <rect x="0" y="46" width="92" height="26" fill="#f5f3ec" />
-          <path d="M0 52q11.5-6 23 0t23 0t23 0t23 0" stroke="#0d5c6b" strokeWidth="3" fill="none" strokeLinecap="round" />
-          <path d="M10 62q11.5-6 23 0t23 0t23 0" stroke="#7fb4bd" strokeWidth="3" fill="none" strokeLinecap="round" />
+          <g stroke="#f2b134" strokeWidth="3" strokeLinecap="round" fill="none"><path d="M46 13v7" transform="rotate(-75 46 46)" /><path d="M46 13v7" transform="rotate(-50 46 46)" /><path d="M46 13v7" transform="rotate(-25 46 46)" /><path d="M46 13v7" transform="rotate(25 46 46)" /><path d="M46 13v7" transform="rotate(50 46 46)" /><path d="M46 13v7" transform="rotate(75 46 46)" /></g>
+          <path d="M22 46A24 24 0 0 1 70 46Z" fill="#f2b134" />
+          <rect x="44" y="14" width="4" height="34" fill="#0b3f4a" />
+          <rect x="39" y="20" width="14" height="3" fill="#0b3f4a" />
+          <rect x="35" y="29" width="22" height="4" fill="#0b3f4a" />
+          <path d="M4 54q7-4 14 0t14 0t14 0t14 0t14 0t14 0" stroke="#0d5c6b" strokeWidth="3" fill="none" strokeLinecap="round" />
+          <path d="M14 63q7-4 14 0t14 0t14 0t14 0" stroke="#7fb4bd" strokeWidth="3" fill="none" strokeLinecap="round" />
         </svg>
       </div>
       <form onSubmit={handleSubmit}>
