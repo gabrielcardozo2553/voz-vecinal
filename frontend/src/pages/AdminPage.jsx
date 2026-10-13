@@ -5,12 +5,13 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Inbox, Trash2, Info, Eye, Search, Copy, X, FileSpreadsheet, FileText } from 'lucide-react';
+import { Trash2, Info, Eye, Search, Copy, X, RefreshCw, FileSpreadsheet, FileText } from 'lucide-react';
 import { iconoCategoria, colorCategoria } from '../utils/categorias';
 import { ESTADOS_TEXTO } from '../utils/estados';
 import { detectarDuplicados } from '../utils/duplicados';
 import { prioridadDe, PRIORIDAD_TEXTO, PRIORIDAD_ORDEN, tiempoMedioDeRespuesta, textoDuracion } from '../utils/prioridad';
 import Spinner from '../components/Spinner';
+import PantallaEstado from '../components/PantallaEstado';
 import MapaCalor from '../components/MapaCalor';
 import DetalleReporteModal from '../components/DetalleReporteModal';
 import Toast from '../components/Toast';
@@ -19,6 +20,7 @@ import { useToast } from '../hooks/useToast';
 function AdminPage() {
   const [reportes, setReportes] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState(false);
   const [filtroCategoria, setFiltroCategoria] = useState('todas');
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [filtroPrioridad, setFiltroPrioridad] = useState('todas');
@@ -54,9 +56,20 @@ function AdminPage() {
     axios.get('/api/admin/reportes', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-      .then(res => setReportes(res.data))
-      .catch(err => console.error(err))
+      .then(res => {
+        setReportes(res.data);
+        setErrorCarga(false);
+      })
+      .catch(err => {
+        console.error(err);
+        if (err.response?.status !== 401) setErrorCarga(true);
+      })
       .finally(() => setCargando(false));
+  };
+
+  const reintentarCarga = () => {
+    setCargando(true);
+    cargarReportes();
   };
 
   useEffect(() => {
@@ -158,6 +171,17 @@ function AdminPage() {
   const iniciales = (r) => `${(r.usuario_nombre || '?')[0]}${(r.usuario_apellido || '')[0] || ''}`.toUpperCase();
 
   if (cargando) return <Spinner texto="Cargando reportes..." />;
+
+  if (errorCarga && reportes.length === 0) {
+    return (
+      <PantallaEstado tipo="conexion">
+        <button type="button" className="pantalla-boton" onClick={reintentarCarga}>
+          <RefreshCw size={18} aria-hidden="true" />
+          Reintentar
+        </button>
+      </PantallaEstado>
+    );
+  }
 
   const contarPorEstado = (estado) => reportes.filter(r => r.estado === estado).length;
 
@@ -457,10 +481,16 @@ function AdminPage() {
       )}
 
       {reportesFiltrados.length === 0 ? (
-        <div className="estado-vacio">
-          <Inbox size={40} strokeWidth={1.5} />
-          <p>No hay reportes que coincidan con estos filtros.</p>
-        </div>
+        reportes.length === 0 ? (
+          <PantallaEstado tipo="vacio" />
+        ) : (
+          <PantallaEstado tipo="sinResultados">
+            <button type="button" className="pantalla-boton pantalla-boton-suave" onClick={limpiarFiltros}>
+              <X size={18} aria-hidden="true" />
+              Limpiar filtros
+            </button>
+          </PantallaEstado>
+        )
       ) : (
         <div className="tabla-scroll">
           <table>

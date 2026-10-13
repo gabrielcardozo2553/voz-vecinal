@@ -1,24 +1,36 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/pages/VerReportesPage.css';
 import { iconoCategoria, colorCategoria } from '../utils/categorias';
-import { Inbox, MapPin, Calendar } from 'lucide-react';
+import { MapPin, Calendar, Plus, X, RefreshCw } from 'lucide-react';
 import { ESTADOS_TEXTO } from '../utils/estados';
 import Spinner from '../components/Spinner';
+import PantallaEstado from '../components/PantallaEstado';
 import DetalleReporteModal from '../components/DetalleReporteModal';
 
 function VerReportesPage() {
   const [reportes, setReportes] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(false);
   const [cantidadVisible, setCantidadVisible] = useState(6);
   const [reporteSeleccionado, setReporteSeleccionado] = useState(null);
   const [filtroMes, setFiltroMes] = useState('todos');
 
-  useEffect(() => {
+  const cargarReportes = () => {
+    setCargando(true);
+    setError(false);
     axios.get('/api/reportes')
       .then(res => setReportes(res.data))
-      .catch(err => console.error(err))
+      .catch(err => {
+        console.error(err);
+        setError(true);
+      })
       .finally(() => setCargando(false));
+  };
+
+  useEffect(() => {
+    cargarReportes();
   }, []);
 
   const [filtroEstado, setFiltroEstado] = useState('todos');
@@ -29,6 +41,17 @@ function VerReportesPage() {
   };
 
   if (cargando) return <Spinner texto="Cargando reportes..." />;
+
+  if (error) {
+    return (
+      <PantallaEstado tipo="conexion">
+        <button type="button" className="pantalla-boton" onClick={cargarReportes}>
+          <RefreshCw size={18} aria-hidden="true" />
+          Reintentar
+        </button>
+      </PantallaEstado>
+    );
+  }
 
   const mesesDisponibles = [...new Set(reportes.map(r => mesAnioTexto(r.fecha_creacion)))];
 
@@ -101,11 +124,25 @@ function VerReportesPage() {
       )}
 
       {reportesFiltrados.length === 0 ? (
-        <div className="estado-vacio">
-          <Inbox size={40} strokeWidth={1.5} />
-          <p>{reportes.length === 0 ? 'Todavía no hay reportes cargados.' : 'No hay reportes con ese filtro.'}</p>
-          {reportes.length === 0 && <span>Sé el primero en reportar un problema de tu barrio.</span>}
-        </div>
+        reportes.length === 0 ? (
+          <PantallaEstado tipo="vacio" texto="Cuando los vecinos reporten problemas, los vas a ver acá. Podés ser el primero.">
+            <Link to="/" className="pantalla-boton">
+              <Plus size={18} aria-hidden="true" />
+              Hacer un reporte
+            </Link>
+          </PantallaEstado>
+        ) : (
+          <PantallaEstado tipo="sinResultados" texto="No hay reportes con ese filtro. Probá con otro estado o mes.">
+            <button
+              type="button"
+              className="pantalla-boton pantalla-boton-suave"
+              onClick={() => { setFiltroEstado('todos'); setFiltroMes('todos'); }}
+            >
+              <X size={18} aria-hidden="true" />
+              Quitar filtros
+            </button>
+          </PantallaEstado>
+        )
       ) : (
         <>
           <div className="reportes-grid">

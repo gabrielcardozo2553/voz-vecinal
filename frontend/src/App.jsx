@@ -1,4 +1,9 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Home, LogIn } from 'lucide-react';
+import { useAuth } from './context/AuthContext';
+import PantallaEstado from './components/PantallaEstado';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import ReportarPage from './pages/ReportarPage';
@@ -9,9 +14,31 @@ import LoginPage from './pages/LoginPage';
 import RutaProtegida from './components/RutaProtegida';
 import BottomNav from './components/layout/BottomNav';
 
+function ControlDeSesion() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const id = axios.interceptors.response.use(
+      (respuesta) => respuesta,
+      (error) => {
+        if (error.response?.status === 401) {
+          logout();
+          navigate('/sesion-vencida', { replace: true });
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => axios.interceptors.response.eject(id);
+  }, [logout, navigate]);
+
+  return null;
+}
+
 function App() {
   return (
     <BrowserRouter>
+      <ControlDeSesion />
       <Header />
       <Routes>
         <Route path="/" element={<ReportarPage />} />
@@ -19,6 +46,28 @@ function App() {
         <Route path="/mis-reportes" element={<RutaProtegida><MisReportesPage /></RutaProtegida>} />
         <Route path="/admin" element={<RutaProtegida soloAdmin={true}><AdminPage /></RutaProtegida>} />
         <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/sesion-vencida"
+          element={
+            <PantallaEstado tipo="sesion">
+              <Link to="/login" className="pantalla-boton">
+                <LogIn size={18} aria-hidden="true" />
+                Ingresar de nuevo
+              </Link>
+            </PantallaEstado>
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <PantallaEstado tipo="noEncontrada">
+              <Link to="/" className="pantalla-boton">
+                <Home size={18} aria-hidden="true" />
+                Ir al inicio
+              </Link>
+            </PantallaEstado>
+          }
+        />
       </Routes>
       <Footer />
       <BottomNav />

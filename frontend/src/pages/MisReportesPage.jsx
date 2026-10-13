@@ -4,26 +4,48 @@ import axios from 'axios';
 import '../styles/pages/MisReportesPage.css';
 import { iconoCategoria, colorCategoria } from '../utils/categorias';
 import { ESTADOS_TEXTO, ESTADOS_ORDEN } from '../utils/estados';
-import { Inbox, MapPin, Calendar, Plus } from 'lucide-react';
+import { Inbox, MapPin, Calendar, Plus, RefreshCw } from 'lucide-react';
 import Spinner from '../components/Spinner';
+import PantallaEstado from '../components/PantallaEstado';
 import DetalleReporteModal from '../components/DetalleReporteModal';
 
 function MisReportesPage() {
   const [reportes, setReportes] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(false);
   const [reporteSeleccionado, setReporteSeleccionado] = useState(null);
 
-  useEffect(() => {
+  const cargarReportes = () => {
     const token = localStorage.getItem('token');
+    setCargando(true);
+    setError(false);
     axios.get('/api/mis-reportes', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => setReportes(res.data))
-      .catch(err => console.error(err))
+      .catch(err => {
+        console.error(err);
+        if (err.response?.status !== 401) setError(true);
+      })
       .finally(() => setCargando(false));
+  };
+
+  useEffect(() => {
+    cargarReportes();
   }, []);
 
   if (cargando) return <Spinner texto="Cargando tus reportes..." />;
+
+  if (error) {
+    return (
+      <PantallaEstado tipo="conexion">
+        <button type="button" className="pantalla-boton" onClick={cargarReportes}>
+          <RefreshCw size={18} aria-hidden="true" />
+          Reintentar
+        </button>
+      </PantallaEstado>
+    );
+  }
 
   const resueltos = reportes.filter(r => r.estado === 'resuelto').length;
   const enCurso = reportes.length - resueltos;
