@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { X, MapPin, Calendar, Check, ExternalLink } from 'lucide-react';
+import { X, MapPin, Calendar, Check, ExternalLink, Trash2, Clock } from 'lucide-react';
 import MapaVista from './MapaVista';
 import { iconoCategoria, colorCategoria } from '../utils/categorias';
 import { ESTADOS_TEXTO, ESTADOS_ORDEN } from '../utils/estados';
+import { prioridadDe, PRIORIDAD_TEXTO, textoDuracion } from '../utils/prioridad';
 import '../styles/components/DetalleReporteModal.css';
 
 const PASOS = [
@@ -11,7 +12,7 @@ const PASOS = [
   { estado: 'resuelto', texto: 'Resuelto' },
 ];
 
-function DetalleReporteModal({ reporte, onCerrar }) {
+function DetalleReporteModal({ reporte, onCerrar, admin = null }) {
   const botonCerrar = useRef(null);
 
   useEffect(() => {
@@ -37,6 +38,13 @@ function DetalleReporteModal({ reporte, onCerrar }) {
   const color = colorCategoria(reporte.categoria);
   const pasoActual = ESTADOS_ORDEN.indexOf(reporte.estado);
   const tieneMapa = reporte.latitud && reporte.longitud;
+  const prioridad = admin ? prioridadDe(reporte) : null;
+  const diasRespuesta = reporte.estado === 'resuelto' && reporte.fecha_resolucion
+    ? (new Date(reporte.fecha_resolucion) - new Date(reporte.fecha_creacion)) / 86400000
+    : null;
+  const iniciales = admin
+    ? `${(reporte.usuario_nombre || '?')[0]}${(reporte.usuario_apellido || '')[0] || ''}`.toUpperCase()
+    : '';
 
   return (
     <div className="detalle-overlay" onClick={onCerrar}>
@@ -71,10 +79,15 @@ function DetalleReporteModal({ reporte, onCerrar }) {
               <Icono size={15} strokeWidth={2} aria-hidden="true" />
               {reporte.categoria}
             </span>
-            <span className={`estado-pill estado-${reporte.estado}`}>
-              <span className="estado-punto" />
-              {ESTADOS_TEXTO[reporte.estado]}
-            </span>
+            <div className="detalle-etiquetas">
+              {prioridad && (
+                <span className={`prioridad prioridad-${prioridad}`}>Prioridad {PRIORIDAD_TEXTO[prioridad].toLowerCase()}</span>
+              )}
+              <span className={`estado-pill estado-${reporte.estado}`}>
+                <span className="estado-punto" />
+                {ESTADOS_TEXTO[reporte.estado]}
+              </span>
+            </div>
           </div>
 
           <h3 className="detalle-titulo">{reporte.descripcion}</h3>
@@ -93,6 +106,37 @@ function DetalleReporteModal({ reporte, onCerrar }) {
               })}
             </p>
           </div>
+
+          {admin && (
+            <div className="detalle-admin">
+              <div className="detalle-vecino">
+                <span className="vecino-avatar" aria-hidden="true">{iniciales}</span>
+                <div>
+                  <p className="detalle-vecino-nombre">{reporte.usuario_nombre} {reporte.usuario_apellido}</p>
+                  <p className="detalle-vecino-dni">DNI {reporte.usuario_dni}</p>
+                </div>
+              </div>
+
+              <div className="detalle-gestion">
+                <label htmlFor="detalle-estado">Estado del reporte</label>
+                <select
+                  id="detalle-estado"
+                  value={reporte.estado}
+                  onChange={(e) => admin.onCambiarEstado(reporte.id, e.target.value)}
+                >
+                  <option value="pendiente">Pendiente</option>
+                  <option value="en_proceso">En proceso</option>
+                  <option value="resuelto">Resuelto</option>
+                </select>
+                {diasRespuesta !== null && diasRespuesta >= 0 && (
+                  <p className="detalle-respuesta">
+                    <Clock size={15} aria-hidden="true" />
+                    Se resolvió en {textoDuracion(diasRespuesta)}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           <ol className="detalle-progreso" aria-label="Avance del reporte">
             {PASOS.map((paso, i) => {
@@ -134,6 +178,13 @@ function DetalleReporteModal({ reporte, onCerrar }) {
               <p className="detalle-sin-mapa">Este reporte no tiene una ubicación marcada en el mapa.</p>
             )}
           </div>
+
+          {admin && (
+            <button type="button" className="detalle-eliminar" onClick={() => admin.onEliminar(reporte)}>
+              <Trash2 size={18} aria-hidden="true" />
+              Eliminar este reporte
+            </button>
+          )}
         </div>
       </div>
     </div>

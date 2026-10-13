@@ -5,12 +5,13 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Inbox, Trash2, Info, X, FileSpreadsheet, FileText } from 'lucide-react';
+import { Inbox, Trash2, Info, Eye, FileSpreadsheet, FileText } from 'lucide-react';
 import { iconoCategoria, colorCategoria } from '../utils/categorias';
 import { ESTADOS_TEXTO } from '../utils/estados';
 import { prioridadDe, PRIORIDAD_TEXTO, PRIORIDAD_ORDEN, tiempoMedioDeRespuesta, textoDuracion } from '../utils/prioridad';
 import Spinner from '../components/Spinner';
 import MapaCalor from '../components/MapaCalor';
+import DetalleReporteModal from '../components/DetalleReporteModal';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
 
@@ -19,18 +20,17 @@ function AdminPage() {
   const [cargando, setCargando] = useState(true);
   const [filtroCategoria, setFiltroCategoria] = useState('todas');
   const [filtroEstado, setFiltroEstado] = useState('todos');
-  const [fotoAmpliada, setFotoAmpliada] = useState(null);
+  const [idDetalle, setIdDetalle] = useState(null);
   const [reporteAEliminar, setReporteAEliminar] = useState(null);
   const [vecinoAVer, setVecinoAVer] = useState(null);
   const { toast, mostrarToast } = useToast();
 
-  const hayModal = Boolean(fotoAmpliada || reporteAEliminar || vecinoAVer);
+  const hayModal = Boolean(reporteAEliminar || vecinoAVer);
 
   useEffect(() => {
     if (!hayModal) return undefined;
     const alTeclear = (e) => {
       if (e.key === 'Escape') {
-        setFotoAmpliada(null);
         setReporteAEliminar(null);
         setVecinoAVer(null);
       }
@@ -319,8 +319,8 @@ function AdminPage() {
                         <button
                           type="button"
                           className="foto-boton"
-                          onClick={() => setFotoAmpliada(r.foto_url)}
-                          aria-label="Ampliar foto del reporte"
+                          onClick={() => setIdDetalle(r.id)}
+                          aria-label="Ver detalle del reporte"
                         >
                           <img src={r.foto_url} alt="" />
                         </button>
@@ -349,14 +349,24 @@ function AdminPage() {
                       </div>
                     </td>
                     <td data-label="Acciones">
-                      <button
-                        type="button"
-                        className="boton-eliminar"
-                        onClick={() => setReporteAEliminar(r)}
-                        aria-label="Eliminar reporte"
-                      >
-                        <Trash2 size={18} aria-hidden="true" />
-                      </button>
+                      <div className="acciones-celda">
+                        <button
+                          type="button"
+                          className="boton-ver"
+                          onClick={() => setIdDetalle(r.id)}
+                          aria-label="Ver detalle del reporte"
+                        >
+                          <Eye size={18} aria-hidden="true" />
+                        </button>
+                        <button
+                          type="button"
+                          className="boton-eliminar"
+                          onClick={() => setReporteAEliminar(r)}
+                          aria-label="Eliminar reporte"
+                        >
+                          <Trash2 size={18} aria-hidden="true" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -398,22 +408,17 @@ function AdminPage() {
         </div>
       )}
 
-      {fotoAmpliada && (
-        <div className="modal-foto-overlay" onClick={() => setFotoAmpliada(null)}>
-          <div
-            className="modal-foto-contenido"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Foto ampliada"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button type="button" className="modal-foto-cerrar" onClick={() => setFotoAmpliada(null)} aria-label="Cerrar">
-              <X size={20} aria-hidden="true" />
-            </button>
-            <img src={fotoAmpliada} alt="Foto ampliada del reporte" />
-          </div>
-        </div>
-      )}
+      <DetalleReporteModal
+        reporte={reportes.find((r) => r.id === idDetalle) || null}
+        onCerrar={() => setIdDetalle(null)}
+        admin={{
+          onCambiarEstado: cambiarEstado,
+          onEliminar: (r) => {
+            setIdDetalle(null);
+            setReporteAEliminar(r);
+          },
+        }}
+      />
 
       {reporteAEliminar && (
         <div className="confirmar-overlay" onClick={() => setReporteAEliminar(null)}>
