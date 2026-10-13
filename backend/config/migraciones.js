@@ -21,7 +21,11 @@ function describirError(error) {
 
 function prepararBaseDeDatos() {
   if (!preparada) {
-    preparada = agregarColumnaSiFalta('reportes', 'fecha_resolucion', 'DATETIME NULL').catch((error) => {
+    preparada = (async () => {
+      await agregarColumnaSiFalta('reportes', 'fecha_resolucion', 'DATETIME NULL');
+      await agregarColumnaSiFalta('reportes', 'responsable', 'VARCHAR(100) NULL');
+      await agregarColumnaSiFalta('reportes', 'notas_internas', 'TEXT NULL');
+    })().catch((error) => {
       preparada = null;
       console.error('No se pudo preparar la base de datos:', describirError(error));
       throw error;

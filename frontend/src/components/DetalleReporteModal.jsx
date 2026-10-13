@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { X, MapPin, Calendar, Check, ExternalLink, Trash2, Clock } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { X, MapPin, Calendar, Check, ExternalLink, Trash2, Clock, Save } from 'lucide-react';
 import MapaVista from './MapaVista';
 import { iconoCategoria, colorCategoria } from '../utils/categorias';
 import { ESTADOS_TEXTO, ESTADOS_ORDEN } from '../utils/estados';
@@ -14,12 +14,27 @@ const PASOS = [
 
 function DetalleReporteModal({ reporte, onCerrar, admin = null }) {
   const botonCerrar = useRef(null);
+  const cerrarRef = useRef(onCerrar);
+  const [responsable, setResponsable] = useState('');
+  const [notas, setNotas] = useState('');
+  const [guardando, setGuardando] = useState(false);
+
+  cerrarRef.current = onCerrar;
+  const abierto = Boolean(reporte);
+  const idReporte = reporte?.id;
+  const responsableGuardado = reporte?.responsable || '';
+  const notasGuardadas = reporte?.notas_internas || '';
 
   useEffect(() => {
-    if (!reporte) return undefined;
+    setResponsable(responsableGuardado);
+    setNotas(notasGuardadas);
+  }, [idReporte, responsableGuardado, notasGuardadas]);
+
+  useEffect(() => {
+    if (!abierto) return undefined;
 
     const alTeclear = (e) => {
-      if (e.key === 'Escape') onCerrar();
+      if (e.key === 'Escape') cerrarRef.current();
     };
     document.addEventListener('keydown', alTeclear);
     const overflowAnterior = document.body.style.overflow;
@@ -30,7 +45,7 @@ function DetalleReporteModal({ reporte, onCerrar, admin = null }) {
       document.removeEventListener('keydown', alTeclear);
       document.body.style.overflow = overflowAnterior;
     };
-  }, [reporte, onCerrar]);
+  }, [abierto, idReporte]);
 
   if (!reporte) return null;
 
@@ -42,6 +57,14 @@ function DetalleReporteModal({ reporte, onCerrar, admin = null }) {
   const diasRespuesta = reporte.estado === 'resuelto' && reporte.fecha_resolucion
     ? (new Date(reporte.fecha_resolucion) - new Date(reporte.fecha_creacion)) / 86400000
     : null;
+  const hayCambiosGestion = responsable.trim() !== responsableGuardado || notas.trim() !== notasGuardadas;
+
+  const guardarGestion = async () => {
+    setGuardando(true);
+    await admin.onGuardarGestion(reporte.id, { responsable, notas_internas: notas });
+    setGuardando(false);
+  };
+
   const iniciales = admin
     ? `${(reporte.usuario_nombre || '?')[0]}${(reporte.usuario_apellido || '')[0] || ''}`.toUpperCase()
     : '';
@@ -134,6 +157,39 @@ function DetalleReporteModal({ reporte, onCerrar, admin = null }) {
                     Se resolvió en {textoDuracion(diasRespuesta)}
                   </p>
                 )}
+              </div>
+
+              <div className="detalle-gestion">
+                <label htmlFor="detalle-responsable">Responsable</label>
+                <input
+                  id="detalle-responsable"
+                  type="text"
+                  value={responsable}
+                  maxLength={100}
+                  placeholder="Persona o área a cargo (ej: Obras Públicas)"
+                  onChange={(e) => setResponsable(e.target.value)}
+                />
+              </div>
+
+              <div className="detalle-gestion">
+                <label htmlFor="detalle-notas">Notas internas</label>
+                <textarea
+                  id="detalle-notas"
+                  value={notas}
+                  maxLength={2000}
+                  rows={3}
+                  placeholder="Solo las ve el personal. Ej: se llamó al contratista."
+                  onChange={(e) => setNotas(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="detalle-guardar"
+                  onClick={guardarGestion}
+                  disabled={!hayCambiosGestion || guardando}
+                >
+                  <Save size={18} aria-hidden="true" />
+                  {guardando ? 'Guardando...' : 'Guardar responsable y notas'}
+                </button>
               </div>
             </div>
           )}

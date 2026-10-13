@@ -146,6 +146,105 @@
   border-color: var(--color-primario);
 }
 
+.admin-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  flex: 1 1 520px;
+}
+
+.admin-buscador {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1.5px solid #b9ccd0;
+  border-radius: 12px;
+  background-color: white;
+  color: var(--color-texto-suave);
+}
+
+.admin-buscador:focus-within {
+  border-color: var(--color-primario);
+}
+
+.admin-buscador input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--color-texto);
+}
+
+.admin-buscador input:focus {
+  outline: none;
+}
+
+.admin-fecha {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-texto-suave);
+}
+
+.admin-fecha input {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1.5px solid #b9ccd0;
+  border-radius: 12px;
+  background-color: white;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--color-texto);
+}
+
+.admin-fecha input:focus {
+  outline: none;
+  border-color: var(--color-primario);
+}
+
+.admin-resultado {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: -8px 0 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-texto-suave);
+}
+
+.admin-limpiar {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background-color: var(--color-primario-claro);
+  color: var(--color-primario-oscuro);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.responsable {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-texto);
+}
+
+.responsable-vacio {
+  font-size: 0.85rem;
+  color: var(--color-texto-suave);
+}
+
 .botones-exportar {
   display: flex;
   gap: 10px;
@@ -615,6 +714,14 @@
   }
 
   .admin-select {
+    width: 100%;
+  }
+
+  .admin-fecha {
+    flex: 1 1 140px;
+  }
+
+  .admin-fecha input {
     width: 100%;
   }
 

@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Inbox, Trash2, Info, Eye, FileSpreadsheet, FileText } from 'lucide-react';
+import { Inbox, Trash2, Info, Eye, Search, FileSpreadsheet, FileText } from 'lucide-react';
 import { iconoCategoria, colorCategoria } from '../utils/categorias';
 import { ESTADOS_TEXTO } from '../utils/estados';
 import { prioridadDe, PRIORIDAD_TEXTO, PRIORIDAD_ORDEN, tiempoMedioDeRespuesta, textoDuracion } from '../utils/prioridad';
@@ -20,6 +20,10 @@ function AdminPage() {
   const [cargando, setCargando] = useState(true);
   const [filtroCategoria, setFiltroCategoria] = useState('todas');
   const [filtroEstado, setFiltroEstado] = useState('todos');
+  const [filtroPrioridad, setFiltroPrioridad] = useState('todas');
+  const [busqueda, setBusqueda] = useState('');
+  const [fechaDesde, setFechaDesde] = useState('');
+  const [fechaHasta, setFechaHasta] = useState('');
   const [idDetalle, setIdDetalle] = useState(null);
   const [reporteAEliminar, setReporteAEliminar] = useState(null);
   const [vecinoAVer, setVecinoAVer] = useState(null);
@@ -69,6 +73,20 @@ function AdminPage() {
     }
   };
 
+  const guardarGestion = async (id, datos) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`/api/reportes/${id}/gestion`, datos, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      cargarReportes();
+      mostrarToast('Datos guardados', 'exito');
+    } catch (error) {
+      console.error(error);
+      mostrarToast('No se pudieron guardar los datos', 'error');
+    }
+  };
+
   const eliminarReporte = async (id) => {
     try {
       const token = localStorage.getItem('token');
@@ -101,11 +119,39 @@ function AdminPage() {
   const contarPorEstado = (estado) => reportes.filter(r => r.estado === estado).length;
 
   const categoriasUnicas = [...new Set(reportes.map(r => r.categoria))];
+  const normalizar = (texto) => String(texto || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  const terminos = normalizar(busqueda).split(/\s+/).filter(Boolean);
+  const desde = fechaDesde ? new Date(`${fechaDesde}T00:00:00`) : null;
+  const hasta = fechaHasta ? new Date(`${fechaHasta}T23:59:59`) : null;
+
   const reportesFiltrados = reportes.filter(r => {
     const coincideCategoria = filtroCategoria === 'todas' || r.categoria === filtroCategoria;
     const coincideEstado = filtroEstado === 'todos' || r.estado === filtroEstado;
-    return coincideCategoria && coincideEstado;
+    const coincidePrioridad = filtroPrioridad === 'todas' || prioridadDe(r) === filtroPrioridad;
+    const fecha = new Date(r.fecha_creacion);
+    const coincideFecha = (!desde || fecha >= desde) && (!hasta || fecha <= hasta);
+    const textoReporte = normalizar(
+      `${r.direccion} ${r.descripcion} ${r.categoria} ${r.usuario_nombre} ${r.usuario_apellido} ${r.usuario_dni} ${r.responsable || ''}`
+    );
+    const coincideTexto = terminos.every(t => textoReporte.includes(t));
+    return coincideCategoria && coincideEstado && coincidePrioridad && coincideFecha && coincideTexto;
   });
+
+  const hayFiltros = filtroCategoria !== 'todas' || filtroEstado !== 'todos' || filtroPrioridad !== 'todas'
+    || busqueda.trim() !== '' || fechaDesde !== '' || fechaHasta !== '';
+
+  const limpiarFiltros = () => {
+    setFiltroCategoria('todas');
+    setFiltroEstado('todos');
+    setFiltroPrioridad('todas');
+    setBusqueda('');
+    setFechaDesde('');
+    setFechaHasta('');
+  };
 
   const DIAS_ANTIGUO = 7;
   const pendientesAntiguos = reportes.filter(
@@ -148,6 +194,8 @@ function AdminPage() {
       Categoría: r.categoria,
       Dirección: r.direccion,
       Descripción: r.descripcion,
+      Prioridad: prioridadDe(r) ? PRIORIDAD_TEXTO[prioridadDe(r)] : '',
+      Responsable: r.responsable || '',
       Estado: estadoTexto[r.estado],
       Fecha: new Date(r.fecha_creacion).toLocaleDateString('es-AR')
     }));
@@ -228,17 +276,51 @@ function AdminPage() {
       </div>
 
       <div className="admin-barra">
-        <select
-          className="admin-select"
-          aria-label="Filtrar por categoría"
-          value={filtroCategoria}
-          onChange={(e) => setFiltroCategoria(e.target.value)}
-        >
-          <option value="todas">Todas las categorías</option>
-          {categoriasUnicas.map(cat => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
+        <div className="admin-filtros">
+          <label className="admin-buscador">
+            <Search size={18} aria-hidden="true" />
+            <input
+              type="search"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar por dirección, descripción, vecino o DNI"
+              aria-label="Buscar reportes"
+            />
+          </label>
+
+          <select
+            className="admin-select"
+            aria-label="Filtrar por categoría"
+            value={filtroCategoria}
+            onChange={(e) => setFiltroCategoria(e.target.value)}
+          >
+            <option value="todas">Todas las categorías</option>
+            {categoriasUnicas.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+
+          <select
+            className="admin-select"
+            aria-label="Filtrar por prioridad"
+            value={filtroPrioridad}
+            onChange={(e) => setFiltroPrioridad(e.target.value)}
+          >
+            <option value="todas">Todas las prioridades</option>
+            <option value="alta">Prioridad alta</option>
+            <option value="media">Prioridad media</option>
+            <option value="baja">Prioridad baja</option>
+          </select>
+
+          <label className="admin-fecha">
+            <span>Desde</span>
+            <input type="date" value={fechaDesde} max={fechaHasta || undefined} onChange={(e) => setFechaDesde(e.target.value)} />
+          </label>
+          <label className="admin-fecha">
+            <span>Hasta</span>
+            <input type="date" value={fechaHasta} min={fechaDesde || undefined} onChange={(e) => setFechaHasta(e.target.value)} />
+          </label>
+        </div>
 
         <div className="botones-exportar">
           <button type="button" className="boton-exportar" onClick={exportarExcel}>
@@ -251,6 +333,13 @@ function AdminPage() {
           </button>
         </div>
       </div>
+
+      {hayFiltros && (
+        <p className="admin-resultado" role="status">
+          Mostrando {reportesFiltrados.length} de {reportes.length} reportes.
+          <button type="button" className="admin-limpiar" onClick={limpiarFiltros}>Limpiar filtros</button>
+        </p>
+      )}
 
       <div className="admin-seccion-titulo">
         <h3>Para atender primero</h3>
@@ -274,6 +363,7 @@ function AdminPage() {
                 <th>Descripción</th>
                 <th>Foto</th>
                 <th>Antigüedad</th>
+                <th>Responsable</th>
                 <th>Estado</th>
                 <th><span className="sr-only">Acciones</span></th>
               </tr>
@@ -330,6 +420,11 @@ function AdminPage() {
                       <span className={`antiguedad ${r.estado !== 'resuelto' && diasDesde(r.fecha_creacion) >= DIAS_ANTIGUO ? 'antiguedad-alerta' : ''}`}>
                         {textoAntiguedad(r.fecha_creacion)}
                       </span>
+                    </td>
+                    <td data-label="Responsable">
+                      {r.responsable
+                        ? <span className="responsable">{r.responsable}</span>
+                        : <span className="responsable-vacio">Sin asignar</span>}
                     </td>
                     <td data-label="Estado">
                       <div className="estado-celda">
@@ -413,6 +508,7 @@ function AdminPage() {
         onCerrar={() => setIdDetalle(null)}
         admin={{
           onCambiarEstado: cambiarEstado,
+          onGuardarGestion: guardarGestion,
           onEliminar: (r) => {
             setIdDetalle(null);
             setReporteAEliminar(r);

@@ -248,6 +248,53 @@
   border-color: var(--color-primario);
 }
 
+.detalle-gestion input,
+.detalle-gestion textarea {
+  padding: 12px;
+  border: 2px solid var(--color-borde);
+  border-radius: 12px;
+  background-color: white;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--color-texto);
+}
+
+.detalle-gestion textarea {
+  resize: vertical;
+  min-height: 84px;
+}
+
+.detalle-gestion input:focus,
+.detalle-gestion textarea:focus {
+  outline: none;
+  border-color: var(--color-primario);
+}
+
+.detalle-guardar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  border: 0;
+  border-radius: 12px;
+  background-color: var(--color-primario);
+  color: white;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.detalle-guardar:hover:not(:disabled) {
+  background-color: var(--color-primario-oscuro);
+}
+
+.detalle-guardar:disabled {
+  background-color: #8a9a9d;
+  cursor: not-allowed;
+}
+
 .detalle-respuesta {
   display: flex;
   align-items: center;

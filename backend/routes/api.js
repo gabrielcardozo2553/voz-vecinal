@@ -131,6 +131,25 @@ router.put('/reportes/:id/estado', verificarToken, verificarAdmin, async (req, r
   }
 });
 
+router.put('/reportes/:id/gestion', verificarToken, verificarAdmin, async (req, res) => {
+  try {
+    await prepararBaseDeDatos();
+    const { id } = req.params;
+    const responsable = String(req.body.responsable || '').trim().slice(0, 100);
+    const notas = String(req.body.notas_internas || '').trim().slice(0, 2000);
+
+    await db.query(
+      'UPDATE reportes SET responsable = ?, notas_internas = ? WHERE id = ?',
+      [responsable || null, notas || null, id]
+    );
+
+    res.json({ mensaje: 'Gestión actualizada correctamente' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al guardar los datos de gestión' });
+  }
+});
+
 router.delete('/reportes/:id', verificarToken, verificarAdmin, async (req, res) => {
   try {
     const { id } = req.params;
@@ -147,7 +166,7 @@ router.get('/admin/reportes', verificarToken, verificarAdmin, async (req, res) =
     await prepararBaseDeDatos();
     const [rows] = await db.query(`
       SELECT r.id, r.descripcion, r.foto_url, r.direccion, r.estado, r.fecha_creacion,
-             r.fecha_resolucion, r.latitud, r.longitud,
+             r.fecha_resolucion, r.responsable, r.notas_internas, r.latitud, r.longitud,
              c.nombre AS categoria,
              u.nombre AS usuario_nombre, u.apellido AS usuario_apellido, u.dni AS usuario_dni
       FROM reportes r
