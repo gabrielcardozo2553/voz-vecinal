@@ -3,7 +3,7 @@
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: var(--espacio-medio);
-  background: linear-gradient(90deg, var(--color-primario) 0%, #1e8c7c 100%);
+  background: var(--color-primario);
   color: white;
   padding: 12px 30px;
 }

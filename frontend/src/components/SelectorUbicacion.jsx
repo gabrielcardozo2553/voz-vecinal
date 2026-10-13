@@ -1,4 +1,5 @@
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -26,18 +27,31 @@ function ManejadorClicks({ onSeleccionar }) {
   return null;
 }
 
+// Cuando la ubicación cambia desde afuera (por ejemplo con el botón
+// "Usar mi ubicación actual"), el mapa se centra en el nuevo punto.
+function RecentrarMapa({ latitud, longitud }) {
+  const mapa = useMap();
+  useEffect(() => {
+    if (latitud && longitud) {
+      mapa.panTo([latitud, longitud]);
+    }
+  }, [latitud, longitud, mapa]);
+  return null;
+}
+
 function SelectorUbicacion({ latitud, longitud, onSeleccionar }) {
   return (
     <MapContainer
       center={latitud && longitud ? [latitud, longitud] : CENTRO_LA_CRUZ}
       zoom={14}
-      style={{ height: '220px', width: '100%', borderRadius: '10px' }}
+      style={{ height: '220px', width: '100%', borderRadius: '14px' }}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
       />
       <ManejadorClicks onSeleccionar={onSeleccionar} />
+      <RecentrarMapa latitud={latitud} longitud={longitud} />
       {latitud && longitud && <Marker position={[latitud, longitud]} />}
     </MapContainer>
   );

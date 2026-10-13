@@ -1,17 +1,27 @@
 :root {
-  --color-primario: #1e5f8c;
-  --color-primario-oscuro: #164a6e;
+  /* Colores */
+  --color-primario: #0d5c6b;
+  --color-primario-oscuro: #0b3f4a;
+  --color-primario-claro: #dceef0;
   --color-acento: #d9a441;
-  --color-fondo: #f5f7fa;
-  --color-texto: #222;
-  --color-texto-suave: #666;
-  --color-borde: #ddd;
+  --color-urgente: #c2410c;
+  --color-fondo: #f5f3ec;
+  --color-texto: #14262b;
+  --color-texto-suave: #4b5f64;
+  --color-borde: #d9d6cb;
 
+  /* Espacios */
   --espacio-chico: 8px;
   --espacio-medio: 16px;
   --espacio-grande: 24px;
 
+  /* Bordes redondeados */
   --radio-borde: 8px;
+  --radio-grande: 14px;
+
+  /* Tipografías */
+  --fuente-titulos: 'Bricolage Grotesque', 'Segoe UI', sans-serif;
+  --fuente-texto: 'Figtree', 'Segoe UI', Arial, Helvetica, sans-serif;
 }
 
 * {
@@ -20,10 +30,16 @@
 
 body {
   margin: 0;
-  font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+  font-family: var(--fuente-texto);
   background-color: var(--color-fondo);
   color: var(--color-texto);
   line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--fuente-titulos);
 }
 
 a {
@@ -32,4 +48,9 @@ a {
 
 button {
   font-family: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-primario);
+  outline-offset: 2px;
 }
