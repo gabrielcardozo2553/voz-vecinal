@@ -5,7 +5,9 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Inbox, Trash2, Info } from 'lucide-react';
+import { Inbox, Trash2, Info, X, FileSpreadsheet, FileText } from 'lucide-react';
+import { iconoCategoria, colorCategoria } from '../utils/categorias';
+import { ESTADOS_TEXTO } from '../utils/estados';
 import Spinner from '../components/Spinner';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
@@ -19,6 +21,21 @@ function AdminPage() {
   const [reporteAEliminar, setReporteAEliminar] = useState(null);
   const [vecinoAVer, setVecinoAVer] = useState(null);
   const { toast, mostrarToast } = useToast();
+
+  const hayModal = Boolean(fotoAmpliada || reporteAEliminar || vecinoAVer);
+
+  useEffect(() => {
+    if (!hayModal) return undefined;
+    const alTeclear = (e) => {
+      if (e.key === 'Escape') {
+        setFotoAmpliada(null);
+        setReporteAEliminar(null);
+        setVecinoAVer(null);
+      }
+    };
+    document.addEventListener('keydown', alTeclear);
+    return () => document.removeEventListener('keydown', alTeclear);
+  }, [hayModal]);
 
   const cargarReportes = () => {
     const token = localStorage.getItem('token');
@@ -65,11 +82,9 @@ function AdminPage() {
     setReporteAEliminar(null);
   };
 
-  const estadoTexto = {
-    pendiente: 'Pendiente',
-    en_proceso: 'En proceso',
-    resuelto: 'Resuelto'
-  };
+  const estadoTexto = ESTADOS_TEXTO;
+
+  const iniciales = (r) => `${(r.usuario_nombre || '?')[0]}${(r.usuario_apellido || '')[0] || ''}`.toUpperCase();
 
   if (cargando) return <Spinner texto="Cargando reportes..." />;
 
@@ -121,7 +136,7 @@ function AdminPage() {
       head: [['Categoría', 'Dirección', 'Descripción', 'Estado', 'Fecha']],
       body: filas,
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [30, 95, 140] }
+      headStyles: { fillColor: [13, 92, 107] }
     });
 
     doc.save(`reportes_${new Date().toISOString().slice(0, 10)}.pdf`);
@@ -129,35 +144,54 @@ function AdminPage() {
 
   return (
     <div className="admin-page">
-      <h2>Panel de administración</h2>
-      <div className="resumen-estados">
-        <span className="resumen resumen-pendiente">Pendientes: {contarPorEstado('pendiente')}</span>
-        <span className="resumen resumen-en_proceso">En proceso: {contarPorEstado('en_proceso')}</span>
-        <span className="resumen resumen-resuelto">Resueltos: {contarPorEstado('resuelto')}</span>
+      <div className="admin-cabecera">
+        <h2>Panel de administración</h2>
+        <p className="admin-subtitulo">Revisá los reportes de los vecinos y actualizá cómo avanzan.</p>
       </div>
-      <div className="filtros">
-        <select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)}>
+
+      <div className="resumen-estados" role="group" aria-label="Filtrar por estado">
+        {[
+          ['todos', 'Todos', reportes.length],
+          ['pendiente', 'Pendientes', contarPorEstado('pendiente')],
+          ['en_proceso', 'En proceso', contarPorEstado('en_proceso')],
+          ['resuelto', 'Resueltos', contarPorEstado('resuelto')],
+        ].map(([valor, texto, cantidad]) => (
+          <button
+            type="button"
+            key={valor}
+            className={`resumen resumen-${valor} ${filtroEstado === valor ? 'activo' : ''}`}
+            aria-pressed={filtroEstado === valor}
+            onClick={() => setFiltroEstado(valor)}
+          >
+            <span className="resumen-numero">{cantidad}</span>
+            <span className="resumen-texto">{texto}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="admin-barra">
+        <select
+          className="admin-select"
+          aria-label="Filtrar por categoría"
+          value={filtroCategoria}
+          onChange={(e) => setFiltroCategoria(e.target.value)}
+        >
           <option value="todas">Todas las categorías</option>
           {categoriasUnicas.map(cat => (
             <option key={cat} value={cat}>{cat}</option>
           ))}
         </select>
 
-        <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
-          <option value="todos">Todos los estados</option>
-          <option value="pendiente">Pendiente</option>
-          <option value="en_proceso">En proceso</option>
-          <option value="resuelto">Resuelto</option>
-        </select>
-      </div>
-
-      <div className="botones-exportar">
-        <button type="button" className="boton-exportar" onClick={exportarExcel}>
-          📥 Exportar a Excel
-        </button>
-        <button type="button" className="boton-exportar boton-exportar-pdf" onClick={exportarPDF}>
-          📄 Exportar a PDF
-        </button>
+        <div className="botones-exportar">
+          <button type="button" className="boton-exportar" onClick={exportarExcel}>
+            <FileSpreadsheet size={18} aria-hidden="true" />
+            Exportar a Excel
+          </button>
+          <button type="button" className="boton-exportar boton-exportar-pdf" onClick={exportarPDF}>
+            <FileText size={18} aria-hidden="true" />
+            Exportar a PDF
+          </button>
+        </div>
       </div>
 
       {reportesFiltrados.length === 0 ? (
@@ -176,58 +210,79 @@ function AdminPage() {
                 <th>Descripción</th>
                 <th>Foto</th>
                 <th>Estado</th>
-                <th>Acciones</th>
+                <th><span className="sr-only">Acciones</span></th>
               </tr>
             </thead>
             <tbody>
-              {reportesFiltrados.map(r => (
-                <tr key={r.id}>
-                  <td data-label="Categoría">{r.categoria}</td>
-                  <td data-label="Vecino">
-                    <div className="vecino-celda">
-                      <span>{r.usuario_nombre} {r.usuario_apellido}</span>
+              {reportesFiltrados.map(r => {
+                const Icono = iconoCategoria(r.categoria);
+                const color = colorCategoria(r.categoria);
+                return (
+                  <tr key={r.id}>
+                    <td data-label="Categoría">
+                      <span className={`categoria-chip ${color}`}>
+                        <Icono size={15} strokeWidth={2} aria-hidden="true" />
+                        {r.categoria}
+                      </span>
+                    </td>
+                    <td data-label="Vecino">
+                      <div className="vecino-celda">
+                        <span className="vecino-avatar" aria-hidden="true">{iniciales(r)}</span>
+                        <span className="vecino-nombre">{r.usuario_nombre} {r.usuario_apellido}</span>
+                        <button
+                          type="button"
+                          className="boton-info-vecino"
+                          onClick={() => setVecinoAVer(r)}
+                          aria-label={`Ver datos de ${r.usuario_nombre} ${r.usuario_apellido}`}
+                        >
+                          <Info size={16} aria-hidden="true" />
+                        </button>
+                      </div>
+                    </td>
+                    <td data-label="Dirección">{r.direccion}</td>
+                    <td data-label="Descripción">{r.descripcion}</td>
+                    <td data-label="Foto">
+                      {r.foto_url && (
+                        <button
+                          type="button"
+                          className="foto-boton"
+                          onClick={() => setFotoAmpliada(r.foto_url)}
+                          aria-label="Ampliar foto del reporte"
+                        >
+                          <img src={r.foto_url} alt="" />
+                        </button>
+                      )}
+                    </td>
+                    <td data-label="Estado">
+                      <div className="estado-celda">
+                        <span className={`estado-pill estado-${r.estado}`}>
+                          <span className="estado-punto" />
+                          {estadoTexto[r.estado]}
+                        </span>
+                        <select
+                          aria-label="Cambiar estado"
+                          value={r.estado}
+                          onChange={(e) => cambiarEstado(r.id, e.target.value)}
+                        >
+                          <option value="pendiente">Pendiente</option>
+                          <option value="en_proceso">En proceso</option>
+                          <option value="resuelto">Resuelto</option>
+                        </select>
+                      </div>
+                    </td>
+                    <td data-label="Acciones">
                       <button
                         type="button"
-                        className="boton-info-vecino"
-                        onClick={() => setVecinoAVer(r)}
+                        className="boton-eliminar"
+                        onClick={() => setReporteAEliminar(r)}
+                        aria-label="Eliminar reporte"
                       >
-                        <Info size={15} />
+                        <Trash2 size={18} aria-hidden="true" />
                       </button>
-                    </div>
-                  </td>
-                  <td data-label="Dirección">{r.direccion}</td>
-                  <td data-label="Descripción">{r.descripcion}</td>
-                  <td data-label="Foto">
-                    {r.foto_url && (
-                      <img
-                        src={r.foto_url}
-                        alt=""
-                        className="foto-clickeable"
-                        onClick={() => setFotoAmpliada(r.foto_url)}
-                      />
-                    )}
-                  </td>
-                  <td data-label="Estado">
-                    <div className="estado-celda">
-                      <span className={`badge badge-${r.estado}`}>{estadoTexto[r.estado]}</span>
-                      <select value={r.estado} onChange={(e) => cambiarEstado(r.id, e.target.value)}>
-                        <option value="pendiente">Pendiente</option>
-                        <option value="en_proceso">En proceso</option>
-                        <option value="resuelto">Resuelto</option>
-                      </select>
-                    </div>
-                  </td>
-                  <td data-label="Acciones">
-                    <button
-                      type="button"
-                      className="boton-eliminar"
-                      onClick={() => setReporteAEliminar(r)}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -235,17 +290,34 @@ function AdminPage() {
 
       {fotoAmpliada && (
         <div className="modal-foto-overlay" onClick={() => setFotoAmpliada(null)}>
-          <div className="modal-foto-contenido" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-foto-cerrar" onClick={() => setFotoAmpliada(null)}>✕</button>
-            <img src={fotoAmpliada} alt="Foto ampliada" />
+          <div
+            className="modal-foto-contenido"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Foto ampliada"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button type="button" className="modal-foto-cerrar" onClick={() => setFotoAmpliada(null)} aria-label="Cerrar">
+              <X size={20} aria-hidden="true" />
+            </button>
+            <img src={fotoAmpliada} alt="Foto ampliada del reporte" />
           </div>
         </div>
       )}
 
       {reporteAEliminar && (
         <div className="confirmar-overlay" onClick={() => setReporteAEliminar(null)}>
-          <div className="confirmar-contenido" onClick={(e) => e.stopPropagation()}>
-            <p>¿Seguro que querés eliminar este reporte de <strong>{reporteAEliminar.categoria}</strong>?</p>
+          <div
+            className="confirmar-contenido"
+            role="alertdialog"
+            aria-modal="true"
+            aria-label="Confirmar eliminación"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="confirmar-icono" aria-hidden="true"><Trash2 size={24} /></span>
+            <p className="confirmar-texto">
+              ¿Seguro que querés eliminar este reporte de <strong>{reporteAEliminar.categoria}</strong>?
+            </p>
             <p className="confirmar-aviso">Esta acción no se puede deshacer.</p>
             <div className="confirmar-botones">
               <button type="button" className="boton-cancelar" onClick={() => setReporteAEliminar(null)}>
@@ -261,10 +333,19 @@ function AdminPage() {
 
       {vecinoAVer && (
         <div className="confirmar-overlay" onClick={() => setVecinoAVer(null)}>
-          <div className="confirmar-contenido" onClick={(e) => e.stopPropagation()}>
-            <h3 className="vecino-modal-titulo">Datos del vecino</h3>
-            <p><strong>Nombre:</strong> {vecinoAVer.usuario_nombre} {vecinoAVer.usuario_apellido}</p>
-            <p><strong>DNI:</strong> {vecinoAVer.usuario_dni}</p>
+          <div
+            className="confirmar-contenido"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Datos del vecino"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="vecino-avatar vecino-avatar-grande" aria-hidden="true">{iniciales(vecinoAVer)}</span>
+            <h3 className="vecino-modal-titulo">{vecinoAVer.usuario_nombre} {vecinoAVer.usuario_apellido}</h3>
+            <dl className="vecino-datos">
+              <dt>DNI</dt>
+              <dd>{vecinoAVer.usuario_dni}</dd>
+            </dl>
             <div className="confirmar-botones">
               <button type="button" className="boton-cancelar" onClick={() => setVecinoAVer(null)}>
                 Cerrar
