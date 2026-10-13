@@ -2,6 +2,7 @@ const { verificarToken, verificarAdmin } = require('../middleware/auth');
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { prepararBaseDeDatos } = require('../config/migraciones');
 const multer = require('multer');
 const path = require('path');
 
@@ -106,6 +107,7 @@ router.put('/reportes/:id/estado', verificarToken, verificarAdmin, async (req, r
     const { id } = req.params;
     const { estado } = req.body;
 
+    await prepararBaseDeDatos();
     const estadosValidos = ['pendiente', 'en_proceso', 'resuelto'];
     if (!estadosValidos.includes(estado)) {
       return res.status(400).json({ error: 'Estado no válido' });
@@ -142,6 +144,7 @@ router.delete('/reportes/:id', verificarToken, verificarAdmin, async (req, res) 
 
 router.get('/admin/reportes', verificarToken, verificarAdmin, async (req, res) => {
   try {
+    await prepararBaseDeDatos();
     const [rows] = await db.query(`
       SELECT r.id, r.descripcion, r.foto_url, r.direccion, r.estado, r.fecha_creacion,
              r.fecha_resolucion, r.latitud, r.longitud,

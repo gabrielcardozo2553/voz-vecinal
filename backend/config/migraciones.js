@@ -1,5 +1,7 @@
 const db = require('./db');
 
+let preparada = null;
+
 async function agregarColumnaSiFalta(tabla, columna, definicion) {
   const [existe] = await db.query(
     `SELECT 1 FROM information_schema.COLUMNS
@@ -12,8 +14,20 @@ async function agregarColumnaSiFalta(tabla, columna, definicion) {
   }
 }
 
-async function prepararBaseDeDatos() {
-  await agregarColumnaSiFalta('reportes', 'fecha_resolucion', 'DATETIME NULL');
+function describirError(error) {
+  const interno = error.errors && error.errors[0];
+  return error.message || error.code || (interno && (interno.message || interno.code)) || String(error);
+}
+
+function prepararBaseDeDatos() {
+  if (!preparada) {
+    preparada = agregarColumnaSiFalta('reportes', 'fecha_resolucion', 'DATETIME NULL').catch((error) => {
+      preparada = null;
+      console.error('No se pudo preparar la base de datos:', describirError(error));
+      throw error;
+    });
+  }
+  return preparada;
 }
 
 module.exports = { prepararBaseDeDatos };

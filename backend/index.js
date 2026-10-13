@@ -18,7 +18,7 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 2000;
 prepararBaseDeDatos()
-  .catch((error) => console.error('No se pudo preparar la base de datos:', error.message))
+  .catch(() => {})
   .finally(() => {
     app.listen(PORT, () => {
       console.log(`Servidor corriendo en http://localhost:${PORT}`);
