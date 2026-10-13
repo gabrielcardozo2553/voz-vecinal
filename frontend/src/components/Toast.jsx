@@ -5,8 +5,10 @@ function Toast({ mensaje, tipo }) {
   if (!mensaje) return null;
 
   return (
-    <div className={`toast toast-${tipo}`}>
-      {tipo === 'exito' ? <CheckCircle size={18} /> : <XCircle size={18} />}
+    <div className={`toast toast-${tipo}`} role={tipo === 'exito' ? 'status' : 'alert'}>
+      {tipo === 'exito'
+        ? <CheckCircle size={22} aria-hidden="true" />
+        : <XCircle size={22} aria-hidden="true" />}
       <span>{mensaje}</span>
     </div>
   );
