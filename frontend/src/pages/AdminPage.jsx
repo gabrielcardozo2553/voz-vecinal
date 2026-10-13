@@ -8,6 +8,7 @@ import autoTable from 'jspdf-autotable';
 import { Inbox, Trash2, Info, X, FileSpreadsheet, FileText } from 'lucide-react';
 import { iconoCategoria, colorCategoria } from '../utils/categorias';
 import { ESTADOS_TEXTO } from '../utils/estados';
+import { prioridadDe, PRIORIDAD_TEXTO, PRIORIDAD_ORDEN, tiempoMedioDeRespuesta, textoDuracion } from '../utils/prioridad';
 import Spinner from '../components/Spinner';
 import MapaCalor from '../components/MapaCalor';
 import Toast from '../components/Toast';
@@ -127,8 +128,15 @@ function AdminPage() {
     if (PESO_ESTADO[a.estado] !== PESO_ESTADO[b.estado]) {
       return PESO_ESTADO[a.estado] - PESO_ESTADO[b.estado];
     }
+    const prioridadA = prioridadDe(a);
+    const prioridadB = prioridadDe(b);
+    if (prioridadA && prioridadB && prioridadA !== prioridadB) {
+      return PRIORIDAD_ORDEN[prioridadA] - PRIORIDAD_ORDEN[prioridadB];
+    }
     return new Date(a.fecha_creacion) - new Date(b.fecha_creacion);
   });
+
+  const tiempoMedio = tiempoMedioDeRespuesta(reportes);
 
   const conteoPorCategoria = Object.entries(
     reportes.reduce((acc, r) => ({ ...acc, [r.categoria]: (acc[r.categoria] || 0) + 1 }), {})
@@ -208,6 +216,15 @@ function AdminPage() {
             </span>
           </button>
         ))}
+        <div className="resumen resumen-tiempo">
+          <span className="resumen-numero">{tiempoMedio ? textoDuracion(tiempoMedio.dias) : '—'}</span>
+          <span className="resumen-texto">Tiempo de respuesta</span>
+          <span className="resumen-nota">
+            {tiempoMedio
+              ? `Promedio de ${tiempoMedio.cantidad} ${tiempoMedio.cantidad === 1 ? 'resuelto' : 'resueltos'}`
+              : 'Se calcula al resolver reportes'}
+          </span>
+        </div>
       </div>
 
       <div className="admin-barra">
@@ -237,7 +254,7 @@ function AdminPage() {
 
       <div className="admin-seccion-titulo">
         <h3>Para atender primero</h3>
-        <p>Pendientes primero y, dentro de cada estado, los más antiguos.</p>
+        <p>Pendientes primero, por prioridad y, a igual prioridad, los más antiguos.</p>
       </div>
 
       {reportesFiltrados.length === 0 ? (
@@ -250,6 +267,7 @@ function AdminPage() {
           <table>
             <thead>
               <tr>
+                <th>Prioridad</th>
                 <th>Categoría</th>
                 <th>Vecino</th>
                 <th>Dirección</th>
@@ -264,8 +282,16 @@ function AdminPage() {
               {reportesOrdenados.map(r => {
                 const Icono = iconoCategoria(r.categoria);
                 const color = colorCategoria(r.categoria);
+                const prioridad = prioridadDe(r);
                 return (
                   <tr key={r.id}>
+                    <td data-label="Prioridad">
+                      {prioridad ? (
+                        <span className={`prioridad prioridad-${prioridad}`}>{PRIORIDAD_TEXTO[prioridad]}</span>
+                      ) : (
+                        <span className="prioridad-vacia" aria-label="Sin prioridad, ya resuelto">—</span>
+                      )}
+                    </td>
                     <td data-label="Categoría">
                       <span className={`categoria-chip ${color}`}>
                         <Icono size={15} strokeWidth={2} aria-hidden="true" />

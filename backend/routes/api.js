@@ -106,7 +106,21 @@ router.put('/reportes/:id/estado', verificarToken, verificarAdmin, async (req, r
     const { id } = req.params;
     const { estado } = req.body;
 
-    await db.query('UPDATE reportes SET estado = ? WHERE id = ?', [estado, id]);
+    const estadosValidos = ['pendiente', 'en_proceso', 'resuelto'];
+    if (!estadosValidos.includes(estado)) {
+      return res.status(400).json({ error: 'Estado no válido' });
+    }
+
+    await db.query(
+      `UPDATE reportes
+       SET estado = ?,
+           fecha_resolucion = CASE
+             WHEN ? = 'resuelto' THEN COALESCE(fecha_resolucion, NOW())
+             ELSE NULL
+           END
+       WHERE id = ?`,
+      [estado, estado, id]
+    );
 
     res.json({ mensaje: 'Estado actualizado correctamente' });
   } catch (error) {
@@ -130,7 +144,7 @@ router.get('/admin/reportes', verificarToken, verificarAdmin, async (req, res) =
   try {
     const [rows] = await db.query(`
       SELECT r.id, r.descripcion, r.foto_url, r.direccion, r.estado, r.fecha_creacion,
-             r.latitud, r.longitud,
+             r.fecha_resolucion, r.latitud, r.longitud,
              c.nombre AS categoria,
              u.nombre AS usuario_nombre, u.apellido AS usuario_apellido, u.dni AS usuario_dni
       FROM reportes r

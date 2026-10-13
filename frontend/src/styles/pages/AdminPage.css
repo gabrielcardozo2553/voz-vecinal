@@ -33,7 +33,7 @@
 
 .resumen-estados {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 20px;
 }
@@ -80,6 +80,32 @@
 .resumen-resuelto { border-top: 5px solid #2f9e5a; }
 .resumen-resuelto.activo { border-color: #2f9e5a; background-color: #d5f2df; }
 .resumen-todos { border-top: 5px solid #b9ccd0; }
+
+.resumen-tiempo {
+  border-color: var(--color-primario);
+  background-color: var(--color-primario);
+  color: white;
+  cursor: default;
+}
+
+.resumen-tiempo:hover { border-color: var(--color-primario); }
+.resumen-tiempo .resumen-texto,
+.resumen-tiempo .resumen-nota { color: rgba(255, 255, 255, 0.9); }
+
+.prioridad {
+  display: inline-block;
+  min-width: 52px;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.prioridad-alta { background-color: #fbe3d6; color: #8a2f08; }
+.prioridad-media { background-color: #fff1cc; color: #6b4a00; }
+.prioridad-baja { background-color: #e3ebec; color: #2e4a50; }
+.prioridad-vacia { color: var(--color-texto-suave); }
 
 .resumen-nota {
   font-size: 0.78rem;
@@ -600,6 +626,10 @@
 
   .resumen-estados {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .resumen-tiempo {
+    grid-column: 1 / -1;
   }
 
   .admin-select {

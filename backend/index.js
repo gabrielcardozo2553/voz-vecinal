@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const apiRoutes = require('./routes/api');
 const authRoutes = require('./routes/auth'); 
+const { prepararBaseDeDatos } = require('./config/migraciones');
 
 const app = express();
 app.use(cors());
@@ -16,6 +17,10 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 2000;
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+prepararBaseDeDatos()
+  .catch((error) => console.error('No se pudo preparar la base de datos:', error.message))
+  .finally(() => {
+    app.listen(PORT, () => {
+      console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    });
+  });
