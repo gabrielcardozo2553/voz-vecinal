@@ -157,7 +157,7 @@ function LoginPage() {
         <p className="login-subtitulo">
           {esRegistro
             ? 'Con tu cuenta podés reportar problemas y seguir cómo avanzan.'
-            : 'Entrá para reportar un problema y ver cómo avanza.'}
+            : 'Tu barrio, a un reporte de distancia.'}
         </p>
       </div>
 
