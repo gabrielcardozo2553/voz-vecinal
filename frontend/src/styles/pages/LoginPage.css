@@ -51,8 +51,6 @@
   box-shadow: 0 2px 10px rgba(11, 63, 74, 0.06);
 }
 
-/* ---------- Ingresar / Registrarme ---------- */
-
 .login-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -83,8 +81,6 @@
   color: var(--color-primario-oscuro);
   box-shadow: 0 1px 4px rgba(11, 63, 74, 0.15);
 }
-
-/* ---------- Formulario ---------- */
 
 .login-page form {
   display: flex;
@@ -200,8 +196,6 @@
   color: var(--color-texto-suave);
 }
 
-/* ---------- Consentimiento ---------- */
-
 .login-page .consentimiento {
   display: flex;
   align-items: flex-start;
@@ -225,8 +219,6 @@
   accent-color: var(--color-primario);
 }
 
-/* ---------- Mensajes ---------- */
-
 .login-mensaje {
   margin: 0;
   padding: 12px 14px;
@@ -245,8 +237,6 @@
   background-color: #d5f2df;
   color: #146c34;
 }
-
-/* ---------- Enviar ---------- */
 
 .login-page .login-enviar {
   min-height: 56px;

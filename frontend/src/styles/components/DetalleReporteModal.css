@@ -93,8 +93,6 @@
   color: var(--color-primario);
 }
 
-/* ---------- Avance ---------- */
-
 .detalle-progreso {
   display: flex;
   justify-content: space-between;
@@ -149,8 +147,6 @@
   color: var(--color-texto);
   font-weight: 600;
 }
-
-/* ---------- Mapa ---------- */
 
 .detalle-mapa-bloque {
   display: flex;

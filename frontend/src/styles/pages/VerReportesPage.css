@@ -22,8 +22,6 @@
   margin: 0;
 }
 
-/* ---------- Filtros ---------- */
-
 .filtros-barra {
   display: flex;
   align-items: center;
@@ -96,8 +94,6 @@
   outline: none;
   border-color: var(--color-primario);
 }
-
-/* ---------- Tarjetas ---------- */
 
 .reportes-grid {
   display: grid;
@@ -185,8 +181,6 @@
   color: var(--color-primario);
 }
 
-/* ---------- Estado (píldora suave) ---------- */
-
 .estado-pill {
   display: inline-flex;
   align-items: center;
@@ -219,8 +213,6 @@
 .estado-resuelto { color: #146c34; }
 .estado-resuelto .estado-punto { background-color: #2f9e5a; }
 
-/* ---------- Cargar más ---------- */
-
 .cargar-mas-contenedor {
   display: flex;
   justify-content: center;
@@ -244,7 +236,6 @@
   background-color: var(--color-primario-claro);
 }
 
-/* Colores por categoría (también los usa el detalle) */
 .color-naranja   { background-color: #ffe3ce; color: #9a4a08; }
 .color-amarillo  { background-color: #fff3c4; color: #7a5c05; }
 .color-verde     { background-color: #d5f2df; color: #146c34; }

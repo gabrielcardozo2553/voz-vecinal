@@ -10,7 +10,6 @@ const SOLO_LETRAS = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ'’\- ]+$/;
 const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const MINIMO_PASSWORD = 8;
 
-// Devuelve el texto del error de un campo, o '' si está bien
 function validarCampo(nombre, valor, esRegistro) {
   const texto = valor.trim();
   switch (nombre) {
@@ -53,7 +52,7 @@ function MensajeCampo({ id, estado, error, ayuda = '', ok = '' }) {
 }
 
 function LoginPage() {
-  const [modo, setModo] = useState('login'); 
+  const [modo, setModo] = useState('login');
   const [formData, setFormData] = useState({ nombre: '', apellido: '', dni: '', email: '', password: '' });
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [mensaje, setMensaje] = useState('');
@@ -85,7 +84,6 @@ function LoginPage() {
     setTocados((previos) => ({ ...previos, [name]: true }));
   };
 
-  // Estado visual de cada campo: neutro hasta que el vecino lo toca
   const estadoCampo = (campo) => {
     if (modo !== 'registro' || !tocados[campo]) return 'neutro';
     return errores[campo] ? 'invalido' : 'valido';
