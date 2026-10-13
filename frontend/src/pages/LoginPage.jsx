@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import '../styles/pages/LoginPage.css';
 
 function LoginPage() {
-  const [modo, setModo] = useState('login');
+  const [modo, setModo] = useState('login'); 
   const [formData, setFormData] = useState({ nombre: '', apellido: '', dni: '', email: '', password: '' });
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [mensaje, setMensaje] = useState('');
@@ -39,17 +39,17 @@ function LoginPage() {
 
     try {
       if (modo === 'registro') {
-        await axios.post('http://localhost:3000/api/auth/registro', { ...formData, aceptaTerminos });
+        await axios.post('/api/auth/registro', { ...formData, aceptaTerminos });
         setMensaje('¡Registro exitoso! Ahora podés iniciar sesión.');
         setAceptaTerminos(false);
         setModo('login');
       } else {
-        const res = await axios.post('http://localhost:3000/api/auth/login', {
+        const res = await axios.post('/api/auth/login', {
           email: formData.email,
           password: formData.password
         });
         login(res.data.token, res.data.usuario);
-        navigate('/'); 
+        navigate('/');
       }
     } catch (error) {
       setMensaje(error.response?.data?.error || 'Ocurrió un error');

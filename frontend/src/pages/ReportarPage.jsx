@@ -27,7 +27,7 @@ function ReportarPage() {
   const [mensaje, setMensaje] = useState('');
 
   useEffect(() => {
-    axios.get('http://localhost:3000/api/categorias')
+    axios.get('/api/categorias')
       .then(res => setCategorias(res.data))
       .catch(err => console.error(err));
   }, []);
@@ -91,7 +91,7 @@ function ReportarPage() {
     const token = localStorage.getItem('token');
 
     try {
-      await axios.post('http://localhost:3000/api/reportes', data, {
+      await axios.post('/api/reportes', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`

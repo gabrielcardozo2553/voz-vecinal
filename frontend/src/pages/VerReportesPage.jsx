@@ -14,7 +14,7 @@ function VerReportesPage() {
   const [filtroMes, setFiltroMes] = useState('todos');
 
   useEffect(() => {
-    axios.get('http://localhost:3000/api/reportes')
+    axios.get('/api/reportes')
       .then(res => setReportes(res.data))
       .catch(err => console.error(err))
       .finally(() => setCargando(false));
@@ -89,7 +89,7 @@ function VerReportesPage() {
                 >
                   {r.foto_url && (
                     <img
-                      src={`http://localhost:3000${r.foto_url}`}
+                      src={r.foto_url}
                       alt="Foto del reporte"
                       className="reporte-foto"
                     />

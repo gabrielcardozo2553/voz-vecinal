@@ -22,7 +22,7 @@ function AdminPage() {
 
   const cargarReportes = () => {
     const token = localStorage.getItem('token');
-    axios.get('http://localhost:3000/api/admin/reportes', {
+    axios.get('/api/admin/reportes', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => setReportes(res.data))
@@ -38,7 +38,7 @@ function AdminPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `http://localhost:3000/api/reportes/${id}/estado`,
+        `/api/reportes/${id}/estado`,
         { estado: nuevoEstado },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -53,7 +53,7 @@ function AdminPage() {
   const eliminarReporte = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:3000/api/reportes/${id}`, {
+      await axios.delete(`/api/reportes/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       cargarReportes();
@@ -200,10 +200,10 @@ function AdminPage() {
                   <td data-label="Foto">
                     {r.foto_url && (
                       <img
-                        src={`http://localhost:3000${r.foto_url}`}
+                        src={r.foto_url}
                         alt=""
                         className="foto-clickeable"
-                        onClick={() => setFotoAmpliada(`http://localhost:3000${r.foto_url}`)}
+                        onClick={() => setFotoAmpliada(r.foto_url)}
                       />
                     )}
                   </td>

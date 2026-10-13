@@ -13,7 +13,7 @@ function MisReportesPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    axios.get('http://localhost:3000/api/mis-reportes', {
+    axios.get('/api/mis-reportes', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => setReportes(res.data))
@@ -55,7 +55,7 @@ function MisReportesPage() {
               >
                 {r.foto_url && (
                   <img
-                    src={`http://localhost:3000${r.foto_url}`}
+                    src={r.foto_url}
                     alt="Foto del reporte"
                     className="reporte-foto"
                   />

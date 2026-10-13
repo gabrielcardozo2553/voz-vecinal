@@ -24,7 +24,7 @@ function DetalleReporteModal({ reporte, onCerrar }) {
 
         {reporte.foto_url && (
           <img
-            src={`http://localhost:3000${reporte.foto_url}`}
+            src={reporte.foto_url}
             alt="Foto del reporte"
             className="detalle-foto"
           />
