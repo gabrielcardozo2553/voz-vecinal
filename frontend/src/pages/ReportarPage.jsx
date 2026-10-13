@@ -8,6 +8,7 @@ import { iconoCategoria, colorCategoria } from '../utils/categorias';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
 import SelectorUbicacion from '../components/SelectorUbicacion';
+import { comprimirImagen } from '../utils/imagen';
 
 const TAMANO_MAXIMO_MB = 5;
 
@@ -31,6 +32,8 @@ function ReportarPage() {
   const [buscandoUbicacion, setBuscandoUbicacion] = useState(false);
   const [foto, setFoto] = useState(null);
   const [fotoPreview, setFotoPreview] = useState(null);
+  const [procesandoFoto, setProcesandoFoto] = useState(false);
+  const [mensajeFoto, setMensajeFoto] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
   const [mensaje, setMensaje] = useState('');
@@ -79,21 +82,34 @@ function ReportarPage() {
     );
   };
 
-  const handleFotoChange = (e) => {
-    const archivo = e.target.files[0];
+  const handleFotoChange = async (e) => {
+    const entrada = e.target;
+    const archivo = entrada.files[0];
 
     if (!archivo) return;
 
-    const tamanoMB = archivo.size / (1024 * 1024);
+    setProcesandoFoto(true);
+    setMensajeFoto('');
+
+    let resultado;
+    try {
+      resultado = await comprimirImagen(archivo);
+    } catch {
+      resultado = archivo;
+    }
+
+    entrada.value = '';
+    setProcesandoFoto(false);
+
+    const tamanoMB = resultado.size / (1024 * 1024);
     if (tamanoMB > TAMANO_MAXIMO_MB) {
-      setMensaje(`La foto pesa ${tamanoMB.toFixed(1)}MB. El máximo permitido es ${TAMANO_MAXIMO_MB}MB — probá con otra foto o sacale una nueva con menor calidad.`);
-      e.target.value = '';
+      setMensajeFoto(`La foto pesa ${tamanoMB.toFixed(1)}MB y el máximo es ${TAMANO_MAXIMO_MB}MB. Probá con otra.`);
       return;
     }
 
     if (fotoPreview) URL.revokeObjectURL(fotoPreview);
-    setFoto(archivo);
-    setFotoPreview(URL.createObjectURL(archivo));
+    setFoto(resultado);
+    setFotoPreview(URL.createObjectURL(resultado));
     setMensaje('');
   };
 
@@ -101,6 +117,7 @@ function ReportarPage() {
     if (fotoPreview) URL.revokeObjectURL(fotoPreview);
     setFoto(null);
     setFotoPreview(null);
+    setMensajeFoto('');
   };
 
   const reiniciarFormulario = () => {
@@ -328,6 +345,8 @@ function ReportarPage() {
               </label>
             </div>
           </div>
+          {procesandoFoto && <p className="foto-estado" role="status">Preparando la foto...</p>}
+          {mensajeFoto && <p className="mensaje-error" role="alert">{mensajeFoto}</p>}
           <p className="foto-consejo">
             <Lightbulb size={18} aria-hidden="true" />
             Sacala de día y con buena luz, así se ve mejor el problema.

@@ -555,3 +555,10 @@
     font-size: 1.9rem;
   }
 }
+
+.foto-estado {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-primario);
+}
