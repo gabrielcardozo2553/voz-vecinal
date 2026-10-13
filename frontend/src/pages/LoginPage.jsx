@@ -87,7 +87,7 @@ function LoginPage() {
 
   // Estado visual de cada campo: neutro hasta que el vecino lo toca
   const estadoCampo = (campo) => {
-    if (!tocados[campo]) return 'neutro';
+    if (modo !== 'registro' || !tocados[campo]) return 'neutro';
     return errores[campo] ? 'invalido' : 'valido';
   };
 
@@ -104,7 +104,13 @@ function LoginPage() {
     setMensaje('');
     setMensajeExito(false);
 
-    const primerError = camposDelModo.find((campo) => errores[campo]);
+    if (modo === 'login' && (!formData.email.trim() || !formData.password)) {
+      setMensaje('Completá tu email y tu contraseña.');
+      document.getElementById(formData.email.trim() ? 'password' : 'email')?.focus();
+      return;
+    }
+
+    const primerError = modo === 'registro' ? camposDelModo.find((campo) => errores[campo]) : null;
     if (primerError) {
       setTocados(Object.fromEntries(camposDelModo.map((campo) => [campo, true])));
       setMensaje('Revisá los campos marcados en rojo.');
