@@ -13,8 +13,16 @@
   margin-bottom: 20px;
 }
 
-.login-dibujo {
-  margin-bottom: 4px;
+.login-logo {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 8px;
+  border-radius: 22px;
+  background-color: var(--color-primario);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(11, 63, 74, 0.2);
 }
 
 .login-hero h2 {

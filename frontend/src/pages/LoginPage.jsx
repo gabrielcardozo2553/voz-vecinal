@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import Logo from '../components/Logo';
 import { User, Mail, Lock, IdCard, Eye, EyeOff, ShieldCheck, LogIn, UserPlus, CheckCircle, AlertCircle } from 'lucide-react';
 import '../styles/pages/LoginPage.css';
 
@@ -149,15 +150,9 @@ function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-hero">
-        <svg className="login-dibujo" width="92" height="72" viewBox="0 0 92 72" aria-hidden="true">
-          <g stroke="#f2b134" strokeWidth="3" strokeLinecap="round" fill="none"><path d="M46 13v7" transform="rotate(-75 46 46)" /><path d="M46 13v7" transform="rotate(-50 46 46)" /><path d="M46 13v7" transform="rotate(-25 46 46)" /><path d="M46 13v7" transform="rotate(25 46 46)" /><path d="M46 13v7" transform="rotate(50 46 46)" /><path d="M46 13v7" transform="rotate(75 46 46)" /></g>
-          <path d="M22 46A24 24 0 0 1 70 46Z" fill="#f2b134" />
-          <rect x="44" y="14" width="4" height="34" fill="#0b3f4a" />
-          <rect x="39" y="20" width="14" height="3" fill="#0b3f4a" />
-          <rect x="35" y="29" width="22" height="4" fill="#0b3f4a" />
-          <path d="M4 54q7-4 14 0t14 0t14 0t14 0t14 0t14 0" stroke="#0d5c6b" strokeWidth="3" fill="none" strokeLinecap="round" />
-          <path d="M14 63q7-4 14 0t14 0t14 0t14 0" stroke="#7fb4bd" strokeWidth="3" fill="none" strokeLinecap="round" />
-        </svg>
+        <span className="login-logo">
+          <Logo size={44} />
+        </span>
         <h2>{esRegistro ? 'Creá tu cuenta' : 'Bienvenido a Voz Vecinal'}</h2>
         <p className="login-subtitulo">
           {esRegistro
