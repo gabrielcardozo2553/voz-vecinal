@@ -5,9 +5,10 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Inbox, Trash2, Info, Eye, Search, FileSpreadsheet, FileText } from 'lucide-react';
+import { Inbox, Trash2, Info, Eye, Search, Copy, FileSpreadsheet, FileText } from 'lucide-react';
 import { iconoCategoria, colorCategoria } from '../utils/categorias';
 import { ESTADOS_TEXTO } from '../utils/estados';
+import { detectarDuplicados } from '../utils/duplicados';
 import { prioridadDe, PRIORIDAD_TEXTO, PRIORIDAD_ORDEN, tiempoMedioDeRespuesta, textoDuracion } from '../utils/prioridad';
 import Spinner from '../components/Spinner';
 import MapaCalor from '../components/MapaCalor';
@@ -24,6 +25,7 @@ function AdminPage() {
   const [busqueda, setBusqueda] = useState('');
   const [fechaDesde, setFechaDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
+  const [soloDuplicados, setSoloDuplicados] = useState(false);
   const [idDetalle, setIdDetalle] = useState(null);
   const [reporteAEliminar, setReporteAEliminar] = useState(null);
   const [vecinoAVer, setVecinoAVer] = useState(null);
@@ -124,6 +126,8 @@ function AdminPage() {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
 
+  const duplicados = detectarDuplicados(reportes);
+
   const terminos = normalizar(busqueda).split(/\s+/).filter(Boolean);
   const desde = fechaDesde ? new Date(`${fechaDesde}T00:00:00`) : null;
   const hasta = fechaHasta ? new Date(`${fechaHasta}T23:59:59`) : null;
@@ -138,11 +142,12 @@ function AdminPage() {
       `${r.direccion} ${r.descripcion} ${r.categoria} ${r.usuario_nombre} ${r.usuario_apellido} ${r.usuario_dni} ${r.responsable || ''}`
     );
     const coincideTexto = terminos.every(t => textoReporte.includes(t));
-    return coincideCategoria && coincideEstado && coincidePrioridad && coincideFecha && coincideTexto;
+    const coincideDuplicado = !soloDuplicados || duplicados.has(r.id);
+    return coincideCategoria && coincideEstado && coincidePrioridad && coincideFecha && coincideTexto && coincideDuplicado;
   });
 
   const hayFiltros = filtroCategoria !== 'todas' || filtroEstado !== 'todos' || filtroPrioridad !== 'todas'
-    || busqueda.trim() !== '' || fechaDesde !== '' || fechaHasta !== '';
+    || busqueda.trim() !== '' || fechaDesde !== '' || fechaHasta !== '' || soloDuplicados;
 
   const limpiarFiltros = () => {
     setFiltroCategoria('todas');
@@ -151,6 +156,7 @@ function AdminPage() {
     setBusqueda('');
     setFechaDesde('');
     setFechaHasta('');
+    setSoloDuplicados(false);
   };
 
   const DIAS_ANTIGUO = 7;
@@ -312,6 +318,10 @@ function AdminPage() {
             <option value="baja">Prioridad baja</option>
           </select>
 
+          <label className="admin-check">
+            <input type="checkbox" checked={soloDuplicados} onChange={(e) => setSoloDuplicados(e.target.checked)} />
+            Solo posibles repetidos
+          </label>
           <label className="admin-fecha">
             <span>Desde</span>
             <input type="date" value={fechaDesde} max={fechaHasta || undefined} onChange={(e) => setFechaDesde(e.target.value)} />
@@ -403,7 +413,20 @@ function AdminPage() {
                       </div>
                     </td>
                     <td data-label="Dirección">{r.direccion}</td>
-                    <td data-label="Descripción">{r.descripcion}</td>
+                    <td data-label="Descripción">
+                      {r.descripcion}
+                      {duplicados.has(r.id) && (
+                        <button
+                          type="button"
+                          className="etiqueta-repetido"
+                          onClick={() => setIdDetalle(r.id)}
+                          aria-label={`Posible repetido: hay ${duplicados.get(r.id).length} reporte(s) parecido(s) cerca. Ver detalle`}
+                        >
+                          <Copy size={13} aria-hidden="true" />
+                          Posible repetido ({duplicados.get(r.id).length})
+                        </button>
+                      )}
+                    </td>
                     <td data-label="Foto">
                       {r.foto_url && (
                         <button
@@ -509,6 +532,11 @@ function AdminPage() {
         admin={{
           onCambiarEstado: cambiarEstado,
           onGuardarGestion: guardarGestion,
+          repetidos: (duplicados.get(idDetalle) || [])
+            .map((d) => ({ ...d, reporte: reportes.find((x) => x.id === d.id) }))
+            .filter((d) => d.reporte)
+            .sort((a, b) => a.metros - b.metros),
+          onVerReporte: setIdDetalle,
           onEliminar: (r) => {
             setIdDetalle(null);
             setReporteAEliminar(r);

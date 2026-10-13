@@ -325,6 +325,70 @@
   background-color: #f8c4c4;
 }
 
+.detalle-repetidos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 16px;
+  background-color: #fff8e1;
+  border: 1px solid #f0dfa6;
+}
+
+.detalle-repetidos h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1rem;
+  color: #5a3f00;
+}
+
+.detalle-repetidos p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #5a3f00;
+}
+
+.detalle-repetidos ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detalle-repetidos li button {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 12px;
+  border: 1px solid #f0dfa6;
+  border-radius: 12px;
+  background-color: white;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.detalle-repetidos li button:hover {
+  border-color: #d9a441;
+}
+
+.repetido-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.85rem;
+  color: var(--color-texto-suave);
+}
+
+.repetido-texto strong {
+  font-size: 0.95rem;
+  color: var(--color-texto);
+}
+
 .pin-reporte {
   background: none;
   border: 0;

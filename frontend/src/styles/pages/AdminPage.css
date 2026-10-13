@@ -185,6 +185,44 @@
   outline: none;
 }
 
+.admin-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-texto);
+  cursor: pointer;
+}
+
+.admin-check input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--color-primario);
+}
+
+.etiqueta-repetido {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background-color: #fff1cc;
+  color: #6b4a00;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.etiqueta-repetido:hover {
+  background-color: #ffe6a0;
+}
+
 .admin-fecha {
   display: flex;
   flex-direction: column;

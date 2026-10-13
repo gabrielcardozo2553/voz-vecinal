@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, MapPin, Calendar, Check, ExternalLink, Trash2, Clock, Save } from 'lucide-react';
+import { X, MapPin, Calendar, Check, ExternalLink, Trash2, Clock, Save, Copy } from 'lucide-react';
 import MapaVista from './MapaVista';
 import { iconoCategoria, colorCategoria } from '../utils/categorias';
 import { ESTADOS_TEXTO, ESTADOS_ORDEN } from '../utils/estados';
+import { textoDistancia } from '../utils/duplicados';
 import { prioridadDe, PRIORIDAD_TEXTO, textoDuracion } from '../utils/prioridad';
 import '../styles/components/DetalleReporteModal.css';
 
@@ -191,6 +192,30 @@ function DetalleReporteModal({ reporte, onCerrar, admin = null }) {
                   {guardando ? 'Guardando...' : 'Guardar responsable y notas'}
                 </button>
               </div>
+            </div>
+          )}
+
+          {admin && admin.repetidos.length > 0 && (
+            <div className="detalle-repetidos">
+              <h4>
+                <Copy size={16} aria-hidden="true" />
+                Posibles reportes repetidos
+              </h4>
+              <p>Misma categoría y muy cerca de este reporte. Conviene revisarlos juntos.</p>
+              <ul>
+                {admin.repetidos.map(({ reporte: otro, metros }) => (
+                  <li key={otro.id}>
+                    <button type="button" onClick={() => admin.onVerReporte(otro.id)}>
+                      <span className="repetido-texto">
+                        <strong>{otro.direccion}</strong>
+                        <span>
+                          {textoDistancia(metros)} · {new Date(otro.fecha_creacion).toLocaleDateString('es-AR')} · {ESTADOS_TEXTO[otro.estado]}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
