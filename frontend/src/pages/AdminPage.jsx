@@ -9,6 +9,7 @@ import { Inbox, Trash2, Info, X, FileSpreadsheet, FileText } from 'lucide-react'
 import { iconoCategoria, colorCategoria } from '../utils/categorias';
 import { ESTADOS_TEXTO } from '../utils/estados';
 import Spinner from '../components/Spinner';
+import MapaCalor from '../components/MapaCalor';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
 
@@ -84,6 +85,14 @@ function AdminPage() {
 
   const estadoTexto = ESTADOS_TEXTO;
 
+  const diasDesde = (fecha) => Math.max(0, Math.floor((Date.now() - new Date(fecha).getTime()) / 86400000));
+
+  const textoAntiguedad = (fecha) => {
+    const dias = diasDesde(fecha);
+    if (dias === 0) return 'Hoy';
+    return dias === 1 ? '1 día' : `${dias} días`;
+  };
+
   const iniciales = (r) => `${(r.usuario_nombre || '?')[0]}${(r.usuario_apellido || '')[0] || ''}`.toUpperCase();
 
   if (cargando) return <Spinner texto="Cargando reportes..." />;
@@ -96,6 +105,35 @@ function AdminPage() {
     const coincideEstado = filtroEstado === 'todos' || r.estado === filtroEstado;
     return coincideCategoria && coincideEstado;
   });
+
+  const DIAS_ANTIGUO = 7;
+  const pendientesAntiguos = reportes.filter(
+    r => r.estado === 'pendiente' && diasDesde(r.fecha_creacion) >= DIAS_ANTIGUO
+  ).length;
+  const nuevosEstaSemana = reportes.filter(r => diasDesde(r.fecha_creacion) < DIAS_ANTIGUO).length;
+  const porcentajeResueltos = reportes.length
+    ? Math.round((contarPorEstado('resuelto') / reportes.length) * 100)
+    : 0;
+
+  const notasResumen = {
+    todos: `${nuevosEstaSemana} nuevos esta semana`,
+    pendiente: pendientesAntiguos > 0 ? `${pendientesAntiguos} con más de ${DIAS_ANTIGUO} días` : 'Al día',
+    en_proceso: 'Se están atendiendo',
+    resuelto: `${porcentajeResueltos}% del total`,
+  };
+
+  const PESO_ESTADO = { pendiente: 0, en_proceso: 1, resuelto: 2 };
+  const reportesOrdenados = [...reportesFiltrados].sort((a, b) => {
+    if (PESO_ESTADO[a.estado] !== PESO_ESTADO[b.estado]) {
+      return PESO_ESTADO[a.estado] - PESO_ESTADO[b.estado];
+    }
+    return new Date(a.fecha_creacion) - new Date(b.fecha_creacion);
+  });
+
+  const conteoPorCategoria = Object.entries(
+    reportes.reduce((acc, r) => ({ ...acc, [r.categoria]: (acc[r.categoria] || 0) + 1 }), {})
+  ).sort((a, b) => b[1] - a[1]);
+  const maximoCategoria = conteoPorCategoria.length ? conteoPorCategoria[0][1] : 1;
 
   const exportarExcel = () => {
     const datosParaExportar = reportesFiltrados.map(r => ({
@@ -165,6 +203,9 @@ function AdminPage() {
           >
             <span className="resumen-numero">{cantidad}</span>
             <span className="resumen-texto">{texto}</span>
+            <span className={`resumen-nota ${valor === 'pendiente' && pendientesAntiguos > 0 ? 'resumen-nota-alerta' : ''}`}>
+              {notasResumen[valor]}
+            </span>
           </button>
         ))}
       </div>
@@ -194,6 +235,11 @@ function AdminPage() {
         </div>
       </div>
 
+      <div className="admin-seccion-titulo">
+        <h3>Para atender primero</h3>
+        <p>Pendientes primero y, dentro de cada estado, los más antiguos.</p>
+      </div>
+
       {reportesFiltrados.length === 0 ? (
         <div className="estado-vacio">
           <Inbox size={40} strokeWidth={1.5} />
@@ -209,12 +255,13 @@ function AdminPage() {
                 <th>Dirección</th>
                 <th>Descripción</th>
                 <th>Foto</th>
+                <th>Antigüedad</th>
                 <th>Estado</th>
                 <th><span className="sr-only">Acciones</span></th>
               </tr>
             </thead>
             <tbody>
-              {reportesFiltrados.map(r => {
+              {reportesOrdenados.map(r => {
                 const Icono = iconoCategoria(r.categoria);
                 const color = colorCategoria(r.categoria);
                 return (
@@ -253,6 +300,11 @@ function AdminPage() {
                         </button>
                       )}
                     </td>
+                    <td data-label="Antigüedad">
+                      <span className={`antiguedad ${r.estado !== 'resuelto' && diasDesde(r.fecha_creacion) >= DIAS_ANTIGUO ? 'antiguedad-alerta' : ''}`}>
+                        {textoAntiguedad(r.fecha_creacion)}
+                      </span>
+                    </td>
                     <td data-label="Estado">
                       <div className="estado-celda">
                         <span className={`estado-pill estado-${r.estado}`}>
@@ -285,6 +337,38 @@ function AdminPage() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {reportes.length > 0 && (
+        <div className="admin-paneles">
+          <section className="admin-panel">
+            <h3>Dónde se concentran</h3>
+            <div className="admin-mapa">
+              <MapaCalor reportes={reportesFiltrados} />
+            </div>
+            <p className="admin-panel-nota">
+              Muestra los reportes que estás viendo en la lista. Los círculos más oscuros son zonas con varios reportes juntos.
+            </p>
+          </section>
+
+          <section className="admin-panel">
+            <h3>Reportes por categoría</h3>
+            <ul className="barras">
+              {conteoPorCategoria.map(([categoria, cantidad]) => (
+                <li
+                  key={categoria}
+                  className={`barra-fila ${colorCategoria(categoria).replace('color-', 'tono-')}`}
+                >
+                  <span className="barra-nombre">{categoria}</span>
+                  <span className="barra-pista">
+                    <span className="barra-relleno" style={{ width: `${(cantidad / maximoCategoria) * 100}%` }} />
+                  </span>
+                  <span className="barra-numero">{cantidad}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
         </div>
       )}
 
