@@ -2,8 +2,54 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Lock, IdCard, Eye, EyeOff, ShieldCheck, LogIn, UserPlus } from 'lucide-react';
+import { User, Mail, Lock, IdCard, Eye, EyeOff, ShieldCheck, LogIn, UserPlus, CheckCircle, AlertCircle } from 'lucide-react';
 import '../styles/pages/LoginPage.css';
+
+const SOLO_LETRAS = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ'’\- ]+$/;
+const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const MINIMO_PASSWORD = 8;
+
+// Devuelve el texto del error de un campo, o '' si está bien
+function validarCampo(nombre, valor, esRegistro) {
+  const texto = valor.trim();
+  switch (nombre) {
+    case 'nombre':
+    case 'apellido':
+      if (!texto) return nombre === 'nombre' ? 'Ingresá tu nombre.' : 'Ingresá tu apellido.';
+      if (texto.length < 2 || !SOLO_LETRAS.test(texto)) return 'Usá solo letras.';
+      return '';
+    case 'dni':
+      return /^\d{7,8}$/.test(valor) ? '' : 'El DNI debe tener 7 u 8 números.';
+    case 'email':
+      if (!texto) return 'Ingresá tu email.';
+      return EMAIL_VALIDO.test(texto) ? '' : 'Ingresá un email válido.';
+    case 'password':
+      if (!valor) return 'Ingresá tu contraseña.';
+      if (esRegistro && valor.length < MINIMO_PASSWORD) return `Mínimo ${MINIMO_PASSWORD} caracteres.`;
+      return '';
+    default:
+      return '';
+  }
+}
+
+function IconoEstado({ estado }) {
+  if (estado === 'valido') return <CheckCircle className="icono-estado icono-valido" size={20} aria-hidden="true" />;
+  if (estado === 'invalido') return <AlertCircle className="icono-estado icono-invalido" size={20} aria-hidden="true" />;
+  return null;
+}
+
+function MensajeCampo({ id, estado, error, ayuda = '', ok = '' }) {
+  let texto = ayuda;
+  let clase = 'campo-ayuda';
+  if (estado === 'invalido') {
+    texto = error;
+    clase = 'campo-mensaje campo-mensaje-error';
+  } else if (estado === 'valido' && ok) {
+    texto = ok;
+    clase = 'campo-mensaje campo-mensaje-ok';
+  }
+  return <p className={clase} id={id} aria-live="polite">{texto}</p>;
+}
 
 function LoginPage() {
   const [modo, setModo] = useState('login'); 
@@ -12,6 +58,7 @@ function LoginPage() {
   const [mensaje, setMensaje] = useState('');
   const [mensajeExito, setMensajeExito] = useState(false);
   const [verPassword, setVerPassword] = useState(false);
+  const [tocados, setTocados] = useState({});
   const [enviando, setEnviando] = useState(false);
 
   const { login } = useAuth();
@@ -23,7 +70,28 @@ function LoginPage() {
     setFormData({ ...formData, [name]: valorLimpio });
   };
 
+  const camposDelModo = modo === 'registro'
+    ? ['nombre', 'apellido', 'dni', 'email', 'password']
+    : ['email', 'password'];
+
+  const errores = {};
+  camposDelModo.forEach((campo) => {
+    errores[campo] = validarCampo(campo, formData[campo], modo === 'registro');
+  });
+
+  const marcarTocado = (e) => {
+    const { name } = e.target;
+    setTocados((previos) => ({ ...previos, [name]: true }));
+  };
+
+  // Estado visual de cada campo: neutro hasta que el vecino lo toca
+  const estadoCampo = (campo) => {
+    if (!tocados[campo]) return 'neutro';
+    return errores[campo] ? 'invalido' : 'valido';
+  };
+
   const cambiarModo = (nuevoModo) => {
+    setTocados({});
     setModo(nuevoModo);
     setMensaje('');
     setMensajeExito(false);
@@ -35,11 +103,15 @@ function LoginPage() {
     setMensaje('');
     setMensajeExito(false);
 
+    const primerError = camposDelModo.find((campo) => errores[campo]);
+    if (primerError) {
+      setTocados(Object.fromEntries(camposDelModo.map((campo) => [campo, true])));
+      setMensaje('Revisá los campos marcados en rojo.');
+      document.getElementById(primerError)?.focus();
+      return;
+    }
+
     if (modo === 'registro') {
-      if (!/^\d{7,8}$/.test(formData.dni)) {
-        setMensaje('El DNI debe tener 7 u 8 números, sin puntos.');
-        return;
-      }
       if (!aceptaTerminos) {
         setMensaje('Tenés que aceptar el uso de tus datos para registrarte.');
         return;
@@ -55,6 +127,7 @@ function LoginPage() {
         setMensajeExito(true);
         setFormData({ ...formData, password: '' });
         setAceptaTerminos(false);
+        setTocados({});
         setModo('login');
       } else {
         const res = await axios.post('/api/auth/login', {
@@ -115,29 +188,55 @@ function LoginPage() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           {esRegistro && (
             <>
               <div className="campo-fila">
                 <div className="campo">
                   <label htmlFor="nombre">Nombre</label>
-                  <div className="input-icono">
+                  <div className={`input-icono ${estadoCampo('nombre')}`}>
                     <User size={20} aria-hidden="true" />
-                    <input id="nombre" type="text" name="nombre" autoComplete="given-name" value={formData.nombre} onChange={handleChange} required />
+                    <input
+                      id="nombre"
+                      type="text"
+                      name="nombre"
+                      autoComplete="given-name"
+                      value={formData.nombre}
+                      onChange={handleChange}
+                      onBlur={marcarTocado}
+                      aria-invalid={estadoCampo('nombre') === 'invalido'}
+                      aria-describedby="nombre-mensaje"
+                      required
+                    />
+                    <IconoEstado estado={estadoCampo('nombre')} />
                   </div>
+                  <MensajeCampo id="nombre-mensaje" estado={estadoCampo('nombre')} error={errores.nombre} />
                 </div>
                 <div className="campo">
                   <label htmlFor="apellido">Apellido</label>
-                  <div className="input-icono">
+                  <div className={`input-icono ${estadoCampo('apellido')}`}>
                     <User size={20} aria-hidden="true" />
-                    <input id="apellido" type="text" name="apellido" autoComplete="family-name" value={formData.apellido} onChange={handleChange} required />
+                    <input
+                      id="apellido"
+                      type="text"
+                      name="apellido"
+                      autoComplete="family-name"
+                      value={formData.apellido}
+                      onChange={handleChange}
+                      onBlur={marcarTocado}
+                      aria-invalid={estadoCampo('apellido') === 'invalido'}
+                      aria-describedby="apellido-mensaje"
+                      required
+                    />
+                    <IconoEstado estado={estadoCampo('apellido')} />
                   </div>
+                  <MensajeCampo id="apellido-mensaje" estado={estadoCampo('apellido')} error={errores.apellido} />
                 </div>
               </div>
 
               <div className="campo">
                 <label htmlFor="dni">DNI</label>
-                <div className="input-icono">
+                <div className={`input-icono ${estadoCampo('dni')}`}>
                   <IdCard size={20} aria-hidden="true" />
                   <input
                     id="dni"
@@ -145,31 +244,45 @@ function LoginPage() {
                     name="dni"
                     value={formData.dni}
                     onChange={handleChange}
+                    onBlur={marcarTocado}
                     inputMode="numeric"
                     maxLength={8}
                     placeholder="Sin puntos, solo números"
-                    aria-describedby="dni-ayuda"
+                    aria-invalid={estadoCampo('dni') === 'invalido'}
+                    aria-describedby="dni-mensaje"
                     required
                   />
+                  <IconoEstado estado={estadoCampo('dni')} />
                 </div>
-                <p className="campo-ayuda" id="dni-ayuda">
-                  Lo pedimos para que cada reporte tenga un responsable y se tome en serio.
-                </p>
+                <MensajeCampo id="dni-mensaje" estado={estadoCampo('dni')} error={errores.dni} />
               </div>
             </>
           )}
 
           <div className="campo">
             <label htmlFor="email">Email</label>
-            <div className="input-icono">
+            <div className={`input-icono ${estadoCampo('email')}`}>
               <Mail size={20} aria-hidden="true" />
-              <input id="email" type="email" name="email" autoComplete="email" value={formData.email} onChange={handleChange} required />
+              <input
+                id="email"
+                type="email"
+                name="email"
+                autoComplete="email"
+                value={formData.email}
+                onChange={handleChange}
+                onBlur={marcarTocado}
+                aria-invalid={estadoCampo('email') === 'invalido'}
+                aria-describedby="email-mensaje"
+                required
+              />
+              <IconoEstado estado={estadoCampo('email')} />
             </div>
+            <MensajeCampo id="email-mensaje" estado={estadoCampo('email')} error={errores.email} />
           </div>
 
           <div className="campo">
             <label htmlFor="password">Contraseña</label>
-            <div className="input-icono">
+            <div className={`input-icono ${estadoCampo('password')}`}>
               <Lock size={20} aria-hidden="true" />
               <input
                 id="password"
@@ -178,8 +291,12 @@ function LoginPage() {
                 autoComplete={esRegistro ? 'new-password' : 'current-password'}
                 value={formData.password}
                 onChange={handleChange}
+                onBlur={marcarTocado}
+                aria-invalid={estadoCampo('password') === 'invalido'}
+                aria-describedby="password-mensaje"
                 required
               />
+              <IconoEstado estado={estadoCampo('password')} />
               <button
                 type="button"
                 className="boton-ver-password"
@@ -190,6 +307,13 @@ function LoginPage() {
                 {verPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
               </button>
             </div>
+            <MensajeCampo
+              id="password-mensaje"
+              estado={estadoCampo('password')}
+              error={errores.password}
+              ayuda={esRegistro ? `Mínimo ${MINIMO_PASSWORD} caracteres.` : ''}
+              ok={esRegistro ? 'Contraseña lista.' : ''}
+            />
           </div>
 
           {esRegistro && (

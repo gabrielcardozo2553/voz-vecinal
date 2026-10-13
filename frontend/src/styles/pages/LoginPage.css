@@ -124,6 +124,33 @@
   flex: none;
 }
 
+.input-icono.valido {
+  border-color: #2f9e5a;
+}
+
+.input-icono.invalido {
+  border-color: #b3261e;
+  background-color: #fff7f6;
+}
+
+.icono-valido { color: #2f9e5a; }
+.icono-invalido { color: #b3261e; }
+
+.campo-mensaje {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.campo-mensaje-error { color: #b3261e; }
+.campo-mensaje-ok { color: #146c34; }
+
+.login-page .campo > .campo-ayuda:empty,
+.login-page .campo > .campo-mensaje:empty {
+  display: none;
+}
+
 .login-page .input-icono input {
   flex: 1;
   min-width: 0;
