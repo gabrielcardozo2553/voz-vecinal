@@ -25,6 +25,17 @@ function prepararBaseDeDatos() {
       await agregarColumnaSiFalta('reportes', 'fecha_resolucion', 'DATETIME NULL');
       await agregarColumnaSiFalta('reportes', 'responsable', 'VARCHAR(100) NULL');
       await agregarColumnaSiFalta('reportes', 'notas_internas', 'TEXT NULL');
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS historial_reportes (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          reporte_id INT NOT NULL,
+          usuario_nombre VARCHAR(100) NULL,
+          accion VARCHAR(30) NOT NULL,
+          detalle VARCHAR(255) NULL,
+          fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_historial_reporte (reporte_id)
+        )
+      `);
     })().catch((error) => {
       preparada = null;
       console.error('No se pudo preparar la base de datos:', describirError(error));

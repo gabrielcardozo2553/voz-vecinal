@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, MapPin, Calendar, Check, ExternalLink, Trash2, Clock, Save, Copy } from 'lucide-react';
+import { X, MapPin, Calendar, Check, ExternalLink, Trash2, Clock, Save, Copy, History } from 'lucide-react';
 import MapaVista from './MapaVista';
 import { iconoCategoria, colorCategoria } from '../utils/categorias';
 import { ESTADOS_TEXTO, ESTADOS_ORDEN } from '../utils/estados';
@@ -19,17 +19,32 @@ function DetalleReporteModal({ reporte, onCerrar, admin = null }) {
   const [responsable, setResponsable] = useState('');
   const [notas, setNotas] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const [historial, setHistorial] = useState(null);
 
   cerrarRef.current = onCerrar;
   const abierto = Boolean(reporte);
   const idReporte = reporte?.id;
   const responsableGuardado = reporte?.responsable || '';
   const notasGuardadas = reporte?.notas_internas || '';
+  const estadoActual = reporte?.estado;
+  const cargarHistorial = admin?.cargarHistorial;
 
   useEffect(() => {
     setResponsable(responsableGuardado);
     setNotas(notasGuardadas);
   }, [idReporte, responsableGuardado, notasGuardadas]);
+
+  useEffect(() => {
+    if (!abierto || !cargarHistorial) {
+      setHistorial(null);
+      return undefined;
+    }
+    let vigente = true;
+    cargarHistorial(idReporte)
+      .then((filas) => { if (vigente) setHistorial(filas); })
+      .catch(() => { if (vigente) setHistorial([]); });
+    return () => { vigente = false; };
+  }, [abierto, idReporte, estadoActual, responsableGuardado, notasGuardadas]);
 
   useEffect(() => {
     if (!abierto) return undefined;
@@ -259,6 +274,31 @@ function DetalleReporteModal({ reporte, onCerrar, admin = null }) {
               <p className="detalle-sin-mapa">Este reporte no tiene una ubicación marcada en el mapa.</p>
             )}
           </div>
+
+          {admin && (
+            <div className="detalle-historial">
+              <h4>
+                <History size={16} aria-hidden="true" />
+                Historial
+              </h4>
+              <ul>
+                {(historial || []).map((h) => (
+                  <li key={h.id}>
+                    <span className="historial-detalle">{h.detalle}</span>
+                    <span className="historial-meta">
+                      {h.usuario_nombre || 'Sistema'} · {new Date(h.fecha).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
+                    </span>
+                  </li>
+                ))}
+                <li>
+                  <span className="historial-detalle">Reporte recibido</span>
+                  <span className="historial-meta">
+                    {new Date(reporte.fecha_creacion).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
+                  </span>
+                </li>
+              </ul>
+            </div>
+          )}
 
           {admin && (
             <button type="button" className="detalle-eliminar" onClick={() => admin.onEliminar(reporte)}>

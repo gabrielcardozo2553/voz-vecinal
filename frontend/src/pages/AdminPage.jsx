@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Inbox, Trash2, Info, Eye, Search, Copy, FileSpreadsheet, FileText } from 'lucide-react';
+import { Inbox, Trash2, Info, Eye, Search, Copy, X, FileSpreadsheet, FileText } from 'lucide-react';
 import { iconoCategoria, colorCategoria } from '../utils/categorias';
 import { ESTADOS_TEXTO } from '../utils/estados';
 import { detectarDuplicados } from '../utils/duplicados';
@@ -26,6 +26,10 @@ function AdminPage() {
   const [fechaDesde, setFechaDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
   const [soloDuplicados, setSoloDuplicados] = useState(false);
+  const [seleccion, setSeleccion] = useState(() => new Set());
+  const [estadoLote, setEstadoLote] = useState('');
+  const [responsableLote, setResponsableLote] = useState('');
+  const [aplicandoLote, setAplicandoLote] = useState(false);
   const [idDetalle, setIdDetalle] = useState(null);
   const [reporteAEliminar, setReporteAEliminar] = useState(null);
   const [vecinoAVer, setVecinoAVer] = useState(null);
@@ -87,6 +91,43 @@ function AdminPage() {
       console.error(error);
       mostrarToast('No se pudieron guardar los datos', 'error');
     }
+  };
+
+  const cargarHistorial = async (id) => {
+    const token = localStorage.getItem('token');
+    const res = await axios.get(`/api/admin/reportes/${id}/historial`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    return res.data;
+  };
+
+  const aplicarLote = async (cambios, textoExito) => {
+    setAplicandoLote(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put('/api/reportes-lote', { ids: idsSeleccionados, ...cambios }, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      cargarReportes();
+      setSeleccion(new Set());
+      setEstadoLote('');
+      setResponsableLote('');
+      mostrarToast(textoExito, 'exito');
+    } catch (error) {
+      console.error(error);
+      mostrarToast('No se pudieron actualizar los reportes', 'error');
+    } finally {
+      setAplicandoLote(false);
+    }
+  };
+
+  const alternarSeleccion = (id) => {
+    setSeleccion((previa) => {
+      const nueva = new Set(previa);
+      if (nueva.has(id)) nueva.delete(id);
+      else nueva.add(id);
+      return nueva;
+    });
   };
 
   const eliminarReporte = async (id) => {
@@ -189,6 +230,12 @@ function AdminPage() {
   });
 
   const tiempoMedio = tiempoMedioDeRespuesta(reportes);
+
+  const idsSeleccionados = reportesFiltrados.filter(r => seleccion.has(r.id)).map(r => r.id);
+  const todosMarcados = reportesFiltrados.length > 0 && idsSeleccionados.length === reportesFiltrados.length;
+  const alternarTodos = () => {
+    setSeleccion(todosMarcados ? new Set() : new Set(reportesFiltrados.map(r => r.id)));
+  };
 
   const conteoPorCategoria = Object.entries(
     reportes.reduce((acc, r) => ({ ...acc, [r.categoria]: (acc[r.categoria] || 0) + 1 }), {})
@@ -356,6 +403,59 @@ function AdminPage() {
         <p>Pendientes primero, por prioridad y, a igual prioridad, los más antiguos.</p>
       </div>
 
+      {idsSeleccionados.length > 0 && (
+        <div className="barra-lote" role="region" aria-label="Acciones sobre los reportes elegidos">
+          <p className="lote-cantidad">
+            {idsSeleccionados.length} {idsSeleccionados.length === 1 ? 'reporte elegido' : 'reportes elegidos'}
+          </p>
+
+          <div className="lote-grupo">
+            <select
+              aria-label="Nuevo estado para los reportes elegidos"
+              value={estadoLote}
+              onChange={(e) => setEstadoLote(e.target.value)}
+            >
+              <option value="">Cambiar estado a...</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="en_proceso">En proceso</option>
+              <option value="resuelto">Resuelto</option>
+            </select>
+            <button
+              type="button"
+              className="lote-boton"
+              disabled={!estadoLote || aplicandoLote}
+              onClick={() => aplicarLote({ estado: estadoLote }, 'Estado actualizado en los reportes elegidos')}
+            >
+              Aplicar
+            </button>
+          </div>
+
+          <div className="lote-grupo">
+            <input
+              type="text"
+              value={responsableLote}
+              maxLength={100}
+              placeholder="Responsable (persona o área)"
+              aria-label="Responsable para los reportes elegidos"
+              onChange={(e) => setResponsableLote(e.target.value)}
+            />
+            <button
+              type="button"
+              className="lote-boton"
+              disabled={!responsableLote.trim() || aplicandoLote}
+              onClick={() => aplicarLote({ responsable: responsableLote }, 'Responsable asignado a los reportes elegidos')}
+            >
+              Asignar
+            </button>
+          </div>
+
+          <button type="button" className="lote-cancelar" onClick={() => setSeleccion(new Set())}>
+            <X size={16} aria-hidden="true" />
+            Quitar selección
+          </button>
+        </div>
+      )}
+
       {reportesFiltrados.length === 0 ? (
         <div className="estado-vacio">
           <Inbox size={40} strokeWidth={1.5} />
@@ -366,6 +466,15 @@ function AdminPage() {
           <table>
             <thead>
               <tr>
+                <th>
+                  <input
+                    type="checkbox"
+                    className="casilla-fila"
+                    checked={todosMarcados}
+                    onChange={alternarTodos}
+                    aria-label="Elegir todos los reportes de la lista"
+                  />
+                </th>
                 <th>Prioridad</th>
                 <th>Categoría</th>
                 <th>Vecino</th>
@@ -384,7 +493,16 @@ function AdminPage() {
                 const color = colorCategoria(r.categoria);
                 const prioridad = prioridadDe(r);
                 return (
-                  <tr key={r.id}>
+                  <tr key={r.id} className={seleccion.has(r.id) ? 'fila-elegida' : ''}>
+                    <td data-label="Elegir">
+                      <input
+                        type="checkbox"
+                        className="casilla-fila"
+                        checked={seleccion.has(r.id)}
+                        onChange={() => alternarSeleccion(r.id)}
+                        aria-label={`Elegir el reporte de ${r.categoria} en ${r.direccion}`}
+                      />
+                    </td>
                     <td data-label="Prioridad">
                       {prioridad ? (
                         <span className={`prioridad prioridad-${prioridad}`}>{PRIORIDAD_TEXTO[prioridad]}</span>
@@ -532,6 +650,7 @@ function AdminPage() {
         admin={{
           onCambiarEstado: cambiarEstado,
           onGuardarGestion: guardarGestion,
+          cargarHistorial,
           repetidos: (duplicados.get(idDetalle) || [])
             .map((d) => ({ ...d, reporte: reportes.find((x) => x.id === d.id) }))
             .filter((d) => d.reporte)

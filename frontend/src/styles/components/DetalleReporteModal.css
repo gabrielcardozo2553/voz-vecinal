@@ -389,6 +389,48 @@
   color: var(--color-texto);
 }
 
+.detalle-historial {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detalle-historial h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-primario-oscuro);
+}
+
+.detalle-historial ul {
+  margin: 0;
+  padding: 0 0 0 14px;
+  list-style: none;
+  border-left: 3px solid var(--color-primario-claro);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detalle-historial li {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.historial-detalle {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-texto);
+}
+
+.historial-meta {
+  font-size: 0.8rem;
+  color: var(--color-texto-suave);
+}
+
 .pin-reporte {
   background: none;
   border: 0;

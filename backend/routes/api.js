@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { prepararBaseDeDatos } = require('../config/migraciones');
+const { registrarHistorial } = require('../config/historial');
 const multer = require('multer');
 const path = require('path');
 
@@ -102,6 +103,8 @@ router.get('/mis-reportes', verificarToken, async (req, res) => {
 });
 
 
+const TEXTO_ESTADO = { pendiente: 'Pendiente', en_proceso: 'En proceso', resuelto: 'Resuelto' };
+
 router.put('/reportes/:id/estado', verificarToken, verificarAdmin, async (req, res) => {
   try {
     const { id } = req.params;
@@ -111,6 +114,11 @@ router.put('/reportes/:id/estado', verificarToken, verificarAdmin, async (req, r
     const estadosValidos = ['pendiente', 'en_proceso', 'resuelto'];
     if (!estadosValidos.includes(estado)) {
       return res.status(400).json({ error: 'Estado no válido' });
+    }
+
+    const [previos] = await db.query('SELECT estado FROM reportes WHERE id = ?', [id]);
+    if (previos.length === 0) {
+      return res.status(404).json({ error: 'Reporte no encontrado' });
     }
 
     await db.query(
@@ -123,6 +131,15 @@ router.put('/reportes/:id/estado', verificarToken, verificarAdmin, async (req, r
        WHERE id = ?`,
       [estado, estado, id]
     );
+
+    if (previos[0].estado !== estado) {
+      await registrarHistorial([{
+        reporteId: id,
+        usuario: req.usuario.nombre,
+        accion: 'estado',
+        detalle: `${TEXTO_ESTADO[previos[0].estado] || previos[0].estado} → ${TEXTO_ESTADO[estado]}`,
+      }]);
+    }
 
     res.json({ mensaje: 'Estado actualizado correctamente' });
   } catch (error) {
@@ -138,10 +155,29 @@ router.put('/reportes/:id/gestion', verificarToken, verificarAdmin, async (req, 
     const responsable = String(req.body.responsable || '').trim().slice(0, 100);
     const notas = String(req.body.notas_internas || '').trim().slice(0, 2000);
 
+    const [previos] = await db.query('SELECT responsable, notas_internas FROM reportes WHERE id = ?', [id]);
+    if (previos.length === 0) {
+      return res.status(404).json({ error: 'Reporte no encontrado' });
+    }
+
     await db.query(
       'UPDATE reportes SET responsable = ?, notas_internas = ? WHERE id = ?',
       [responsable || null, notas || null, id]
     );
+
+    const entradas = [];
+    if ((previos[0].responsable || '') !== responsable) {
+      entradas.push({
+        reporteId: id,
+        usuario: req.usuario.nombre,
+        accion: 'responsable',
+        detalle: responsable ? `Responsable: ${responsable}` : 'Se quitó el responsable',
+      });
+    }
+    if ((previos[0].notas_internas || '') !== notas) {
+      entradas.push({ reporteId: id, usuario: req.usuario.nombre, accion: 'notas', detalle: 'Actualizó las notas internas' });
+    }
+    await registrarHistorial(entradas);
 
     res.json({ mensaje: 'Gestión actualizada correctamente' });
   } catch (error) {
@@ -150,10 +186,90 @@ router.put('/reportes/:id/gestion', verificarToken, verificarAdmin, async (req, 
   }
 });
 
+router.put('/reportes-lote', verificarToken, verificarAdmin, async (req, res) => {
+  try {
+    await prepararBaseDeDatos();
+    const ids = Array.isArray(req.body.ids)
+      ? [...new Set(req.body.ids.map(Number).filter(Number.isInteger))].slice(0, 500)
+      : [];
+    const { estado } = req.body;
+    const responsable = typeof req.body.responsable === 'string'
+      ? req.body.responsable.trim().slice(0, 100)
+      : null;
+
+    if (ids.length === 0) {
+      return res.status(400).json({ error: 'No se eligió ningún reporte' });
+    }
+    if (estado === undefined && responsable === null) {
+      return res.status(400).json({ error: 'No se indicó ningún cambio' });
+    }
+    if (estado !== undefined && !TEXTO_ESTADO[estado]) {
+      return res.status(400).json({ error: 'Estado no válido' });
+    }
+
+    const [previos] = await db.query('SELECT id, estado, responsable FROM reportes WHERE id IN (?)', [ids]);
+    const entradas = [];
+
+    if (estado !== undefined) {
+      await db.query(
+        `UPDATE reportes
+         SET estado = ?,
+             fecha_resolucion = CASE
+               WHEN ? = 'resuelto' THEN COALESCE(fecha_resolucion, NOW())
+               ELSE NULL
+             END
+         WHERE id IN (?)`,
+        [estado, estado, ids]
+      );
+      previos.filter((r) => r.estado !== estado).forEach((r) => entradas.push({
+        reporteId: r.id,
+        usuario: req.usuario.nombre,
+        accion: 'estado',
+        detalle: `${TEXTO_ESTADO[r.estado] || r.estado} → ${TEXTO_ESTADO[estado]}`,
+      }));
+    }
+
+    if (responsable !== null) {
+      await db.query('UPDATE reportes SET responsable = ? WHERE id IN (?)', [responsable || null, ids]);
+      previos.filter((r) => (r.responsable || '') !== responsable).forEach((r) => entradas.push({
+        reporteId: r.id,
+        usuario: req.usuario.nombre,
+        accion: 'responsable',
+        detalle: responsable ? `Responsable: ${responsable}` : 'Se quitó el responsable',
+      }));
+    }
+
+    await registrarHistorial(entradas);
+
+    res.json({ mensaje: 'Reportes actualizados correctamente', cantidad: previos.length });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al actualizar los reportes' });
+  }
+});
+
+router.get('/admin/reportes/:id/historial', verificarToken, verificarAdmin, async (req, res) => {
+  try {
+    await prepararBaseDeDatos();
+    const [rows] = await db.query(
+      `SELECT id, usuario_nombre, accion, detalle, fecha
+       FROM historial_reportes
+       WHERE reporte_id = ?
+       ORDER BY fecha DESC, id DESC`,
+      [req.params.id]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener el historial' });
+  }
+});
+
 router.delete('/reportes/:id', verificarToken, verificarAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     await db.query('DELETE FROM reportes WHERE id = ?', [id]);
+    await db.query('DELETE FROM historial_reportes WHERE reporte_id = ?', [id]).catch(() => {});
     res.json({ mensaje: 'Reporte eliminado correctamente' });
   } catch (error) {
     console.error(error);
