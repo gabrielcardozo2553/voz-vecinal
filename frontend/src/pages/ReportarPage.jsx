@@ -3,13 +3,15 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/pages/ReportarPage.css';
 import { useAuth } from '../context/AuthContext';
-import { Send, Check, CheckCircle, LocateFixed, Camera, ImageIcon, X } from 'lucide-react';
-import { iconoCategoria } from '../utils/categorias';
+import { Send, Check, CheckCircle, LocateFixed, Camera, ImageIcon, X, MapPin, Lightbulb, Plus, ShieldCheck } from 'lucide-react';
+import { iconoCategoria, colorCategoria } from '../utils/categorias';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
 import SelectorUbicacion from '../components/SelectorUbicacion';
 
 const TAMANO_MAXIMO_MB = 5;
+
+const MAX_DESCRIPCION = 300;
 
 const FRASES_RAPIDAS = ['Hace varios días', 'Es peligroso', 'Afecta a varias casas'];
 
@@ -55,7 +57,7 @@ function ReportarPage() {
     const actual = formData.descripcion.trim();
     if (actual.toLowerCase().includes(frase.toLowerCase())) return;
     const nueva = actual ? `${actual}. ${frase}` : frase;
-    setFormData({ ...formData, descripcion: nueva });
+    setFormData({ ...formData, descripcion: nueva.slice(0, MAX_DESCRIPCION) });
   };
 
   const handleUsarMiUbicacion = () => {
@@ -174,30 +176,52 @@ function ReportarPage() {
 
   return (
     <div className="reportar-page">
-      <h2>¿Qué pasa en tu barrio?</h2>
-      <p className="reportar-subtitulo">Son tres pasos y tu reporte le llega directo a la Municipalidad.</p>
+      <div className="reportar-hero">
+        <div>
+          <h2>¿Qué pasa en tu barrio?</h2>
+          <p className="reportar-subtitulo">Son tres pasos y tu reporte le llega directo a la Municipalidad.</p>
+        </div>
+        <svg className="hero-dibujo" width="92" height="72" viewBox="0 0 92 72" aria-hidden="true">
+          <circle cx="46" cy="42" r="22" fill="#f2b134" />
+          <g stroke="#f2b134" strokeWidth="3" strokeLinecap="round"><path d="M46 8v7M18 18l5 5M74 18l-5 5M8 42h7M77 42h7" /></g>
+          <rect x="0" y="46" width="92" height="26" fill="#f5f3ec" />
+          <path d="M0 52q11.5-6 23 0t23 0t23 0t23 0" stroke="#0d5c6b" strokeWidth="3" fill="none" strokeLinecap="round" />
+          <path d="M10 62q11.5-6 23 0t23 0t23 0" stroke="#7fb4bd" strokeWidth="3" fill="none" strokeLinecap="round" />
+        </svg>
+      </div>
       <form onSubmit={handleSubmit}>
 
         <section className="reportar-paso">
           <div className="paso-titulo">
             <span className="paso-numero">1</span>
-            <h3>¿Qué tipo de problema es?</h3>
+            <div>
+              <h3>¿Qué tipo de problema es?</h3>
+              <p className="paso-sub">Elegí uno</p>
+            </div>
           </div>
           <div className="categoria-grid">
             {categorias.map(cat => {
               const Icono = iconoCategoria(cat.nombre);
               const estaSeleccionada = formData.categoria_id === cat.id;
+              const color = colorCategoria(cat.nombre);
+              const tono = color.replace('color-', 'tono-');
               return (
                 <button
                   type="button"
                   key={cat.id}
-                  className={`categoria-boton ${estaSeleccionada ? 'seleccionada' : ''}`}
+                  className={`categoria-boton ${tono} ${estaSeleccionada ? 'seleccionada' : ''}`}
                   aria-pressed={estaSeleccionada}
                   onClick={() => handleCategoriaClick(cat.id)}
                 >
-                  <Icono className="categoria-icono" size={26} strokeWidth={1.8} aria-hidden="true" />
+                  <span className="categoria-burbuja">
+                    <Icono size={24} strokeWidth={1.9} aria-hidden="true" />
+                  </span>
                   <span className="categoria-nombre">{cat.nombre}</span>
-                  {estaSeleccionada && <Check className="check-icono" size={18} strokeWidth={2.6} aria-hidden="true" />}
+                  {estaSeleccionada && (
+                    <span className="check-icono">
+                      <Check size={12} strokeWidth={3.5} aria-hidden="true" />
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -207,7 +231,10 @@ function ReportarPage() {
         <section className="reportar-paso">
           <div className="paso-titulo">
             <span className="paso-numero">2</span>
-            <h3>¿Dónde está?</h3>
+            <div>
+              <h3>¿Dónde está?</h3>
+              <p className="paso-sub">Usá tu ubicación o marcalo en el mapa</p>
+            </div>
           </div>
           <button
             type="button"
@@ -224,10 +251,15 @@ function ReportarPage() {
               longitud={ubicacion.lng}
               onSeleccionar={(lat, lng) => setUbicacion({ lat, lng })}
             />
+            {ubicacion.lat && (
+              <span className="mapa-chip"><span className="mapa-chip-punto" />Punto marcado</span>
+            )}
           </div>
           <p className="ayuda-campo">Si querés, tocá el mapa para marcar el punto exacto.</p>
           <div className="campo">
             <label htmlFor="direccion">Dirección o referencia</label>
+            <div className="input-con-icono">
+            <MapPin size={20} aria-hidden="true" />
             <input
               id="direccion"
               type="text"
@@ -237,13 +269,17 @@ function ReportarPage() {
               placeholder="Ej: Sarmiento y Urquiza, frente a la plaza"
               required
             />
+            </div>
           </div>
         </section>
 
         <section className="reportar-paso">
           <div className="paso-titulo">
             <span className="paso-numero">3</span>
-            <h3>Sumá una foto y contanos</h3>
+            <div>
+              <h3>Sumá una foto y contanos</h3>
+              <p className="paso-sub">La foto es obligatoria</p>
+            </div>
           </div>
 
           <div className="foto-dropzone">
@@ -290,6 +326,10 @@ function ReportarPage() {
               </label>
             </div>
           </div>
+          <p className="foto-consejo">
+            <Lightbulb size={18} aria-hidden="true" />
+            Sacala de día y con buena luz, así se ve mejor el problema.
+          </p>
 
           <div className="campo">
             <label htmlFor="descripcion">Descripción</label>
@@ -299,8 +339,10 @@ function ReportarPage() {
               value={formData.descripcion}
               onChange={handleChange}
               placeholder="Contá qué viste y desde cuándo pasa"
+              maxLength={MAX_DESCRIPCION}
               required
             />
+            <span className="contador">{formData.descripcion.length} / {MAX_DESCRIPCION}</span>
           </div>
           <div className="frases-rapidas">
             {FRASES_RAPIDAS.map(frase => (
@@ -310,23 +352,25 @@ function ReportarPage() {
                 className="frase-rapida"
                 onClick={() => handleFraseRapida(frase)}
               >
+                <Plus size={16} aria-hidden="true" />
                 {frase}
               </button>
             ))}
           </div>
+
+          {mensaje && <p className="mensaje-error" role="alert">{mensaje}</p>}
+
+          <div className="reportar-enviar">
+            <button type="submit" disabled={enviando} className="boton-enviar">
+              {enviando ? 'Enviando...' : 'Enviar reporte'}
+              <span className="enviar-circulo"><Send size={18} aria-hidden="true" /></span>
+            </button>
+            <p className="ayuda-campo ayuda-centrada ayuda-icono">
+              <ShieldCheck size={18} aria-hidden="true" />
+              Te avisamos acá cuando la Municipalidad lo reciba y cuando lo resuelva.
+            </p>
+          </div>
         </section>
-
-        {mensaje && <p className="mensaje-error" role="alert">{mensaje}</p>}
-
-        <div className="reportar-enviar">
-          <button type="submit" disabled={enviando} className="boton-enviar">
-            <Send size={20} aria-hidden="true" />
-            {enviando ? 'Enviando...' : 'Enviar reporte'}
-          </button>
-          <p className="ayuda-campo ayuda-centrada">
-            Te avisamos acá cuando la Municipalidad lo reciba y cuando lo resuelva.
-          </p>
-        </div>
       </form>
 
       <Toast mensaje={toast.mensaje} tipo={toast.tipo} />
