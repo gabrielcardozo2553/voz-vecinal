@@ -5,8 +5,8 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Trash2, Info, Eye, Search, Copy, X, RefreshCw, FileSpreadsheet, FileText } from 'lucide-react';
-import { iconoCategoria, colorCategoria } from '../utils/categorias';
+import { Trash2, Info, Eye, Search, Copy, X, RefreshCw, MessageCircle, FileSpreadsheet, FileText } from 'lucide-react';
+import { iconoCategoria, colorCategoria, etiquetaCategoria } from '../utils/categorias';
 import { ESTADOS_TEXTO } from '../utils/estados';
 import { detectarDuplicados } from '../utils/duplicados';
 import { prioridadDe, PRIORIDAD_TEXTO, PRIORIDAD_ORDEN, tiempoMedioDeRespuesta, textoDuracion } from '../utils/prioridad';
@@ -204,7 +204,7 @@ function AdminPage() {
     const fecha = new Date(r.fecha_creacion);
     const coincideFecha = (!desde || fecha >= desde) && (!hasta || fecha <= hasta);
     const textoReporte = normalizar(
-      `${r.direccion} ${r.descripcion} ${r.categoria} ${r.usuario_nombre} ${r.usuario_apellido} ${r.usuario_dni} ${r.responsable || ''}`
+      `${r.direccion} ${r.descripcion} ${r.categoria} ${r.categoria_otro || ''} ${r.usuario_nombre} ${r.usuario_apellido} ${r.usuario_dni} ${r.responsable || ''}`
     );
     const coincideTexto = terminos.every(t => textoReporte.includes(t));
     const coincideDuplicado = !soloDuplicados || duplicados.has(r.id);
@@ -543,7 +543,7 @@ function AdminPage() {
                     <td data-label="Categoría">
                       <span className={`categoria-chip ${color}`}>
                         <Icono size={15} strokeWidth={2} aria-hidden="true" />
-                        {r.categoria}
+                        {etiquetaCategoria(r)}
                       </span>
                     </td>
                     <td data-label="Vecino">
@@ -563,6 +563,12 @@ function AdminPage() {
                     <td data-label="Dirección">{r.direccion}</td>
                     <td data-label="Descripción">
                       {r.descripcion}
+                      {r.ultimo_mensaje_autor && (
+                        <span className={`etiqueta-mensaje ${r.ultimo_mensaje_autor === 'vecino' ? 'etiqueta-mensaje-respondio' : ''}`}>
+                          <MessageCircle size={13} aria-hidden="true" />
+                          {r.ultimo_mensaje_autor === 'vecino' ? 'El vecino respondió' : 'Esperando respuesta del vecino'}
+                        </span>
+                      )}
                       {duplicados.has(r.id) && (
                         <button
                           type="button"
@@ -680,6 +686,7 @@ function AdminPage() {
         admin={{
           onCambiarEstado: cambiarEstado,
           onGuardarGestion: guardarGestion,
+          onMensajeEnviado: cargarReportes,
           cargarHistorial,
           repetidos: (duplicados.get(idDetalle) || [])
             .map((d) => ({ ...d, reporte: reportes.find((x) => x.id === d.id) }))

@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/pages/MisReportesPage.css';
-import { iconoCategoria, colorCategoria } from '../utils/categorias';
+import { iconoCategoria, colorCategoria, etiquetaCategoria } from '../utils/categorias';
 import { ESTADOS_TEXTO, ESTADOS_ORDEN } from '../utils/estados';
-import { Inbox, MapPin, Calendar, Plus, RefreshCw } from 'lucide-react';
+import { Inbox, MapPin, Calendar, Plus, RefreshCw, MessageCircle } from 'lucide-react';
 import Spinner from '../components/Spinner';
 import PantallaEstado from '../components/PantallaEstado';
 import DetalleReporteModal from '../components/DetalleReporteModal';
@@ -15,9 +15,9 @@ function MisReportesPage() {
   const [error, setError] = useState(false);
   const [reporteSeleccionado, setReporteSeleccionado] = useState(null);
 
-  const cargarReportes = () => {
+  const cargarReportes = (silencioso = false) => {
     const token = localStorage.getItem('token');
-    setCargando(true);
+    if (!silencioso) setCargando(true);
     setError(false);
     axios.get('/api/mis-reportes', {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -39,7 +39,7 @@ function MisReportesPage() {
   if (error) {
     return (
       <PantallaEstado tipo="conexion">
-        <button type="button" className="pantalla-boton" onClick={cargarReportes}>
+        <button type="button" className="pantalla-boton" onClick={() => cargarReportes()}>
           <RefreshCw size={18} aria-hidden="true" />
           Reintentar
         </button>
@@ -122,7 +122,7 @@ function MisReportesPage() {
                 <div className="reporte-info">
                   <span className={`categoria-chip ${color}`}>
                     <Icono size={15} strokeWidth={2} aria-hidden="true" />
-                    {r.categoria}
+                    {etiquetaCategoria(r)}
                   </span>
                   <p className="reporte-descripcion">{r.descripcion}</p>
                   <p className="reporte-direccion">
@@ -133,6 +133,12 @@ function MisReportesPage() {
                     <Calendar size={14} aria-hidden="true" />
                     {new Date(r.fecha_creacion).toLocaleDateString('es-AR')}
                   </span>
+                  {r.ultimo_mensaje_autor === 'admin' && (
+                    <span className="aviso-consulta">
+                      <MessageCircle size={14} aria-hidden="true" />
+                      Te pidieron más información
+                    </span>
+                  )}
                   <div
                     className="mini-avance"
                     role="img"
@@ -155,6 +161,8 @@ function MisReportesPage() {
       <DetalleReporteModal
         reporte={reporteSeleccionado}
         onCerrar={() => setReporteSeleccionado(null)}
+        esMio
+        onMensajeEnviado={() => cargarReportes(true)}
       />
     </div>
   );

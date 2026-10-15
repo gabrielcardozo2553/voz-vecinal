@@ -24,6 +24,7 @@ const upload = multer({
 
 router.get('/categorias', async (req, res) => {
   try {
+    await prepararBaseDeDatos().catch(() => {});
     const [rows] = await db.query('SELECT * FROM categorias');
     res.json(rows);
   } catch (error) {
@@ -35,9 +36,10 @@ router.get('/categorias', async (req, res) => {
 
 router.get('/reportes', async (req, res) => {
   try {
+    await prepararBaseDeDatos();
     const [rows] = await db.query(`
       SELECT r.id, r.descripcion, r.foto_url, r.direccion, r.estado, r.fecha_creacion,
-             r.latitud, r.longitud,
+             r.latitud, r.longitud, r.categoria_otro,
              c.nombre AS categoria
       FROM reportes r
       JOIN categorias c ON r.categoria_id = c.id
@@ -69,11 +71,21 @@ router.post('/reportes', verificarToken, (req, res, next) => {
       return res.status(400).json({ error: 'La foto es obligatoria' });
     }
 
+    await prepararBaseDeDatos();
+    const [categorias] = await db.query('SELECT nombre FROM categorias WHERE id = ?', [categoria_id]);
+    if (categorias.length === 0) {
+      return res.status(400).json({ error: 'La categoría no es válida' });
+    }
+    const categoriaOtro = String(req.body.categoria_otro || '').trim().slice(0, 100);
+    if (categorias[0].nombre.toLowerCase() === 'otros' && categoriaOtro.length < 3) {
+      return res.status(400).json({ error: 'Contanos de qué se trata el problema' });
+    }
+
     const foto_url = `/uploads/${req.file.filename}`;
 
     const [result] = await db.query(
-      'INSERT INTO reportes (usuario_id, categoria_id, descripcion, foto_url, direccion, latitud, longitud) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [usuario_id, categoria_id, descripcion, foto_url, direccion, latitud || null, longitud || null]
+      'INSERT INTO reportes (usuario_id, categoria_id, categoria_otro, descripcion, foto_url, direccion, latitud, longitud) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [usuario_id, categoria_id, categoriaOtro || null, descripcion, foto_url, direccion, latitud || null, longitud || null]
     );
 
     res.status(201).json({ id: result.insertId, mensaje: 'Reporte creado correctamente' });
@@ -86,10 +98,13 @@ router.post('/reportes', verificarToken, (req, res, next) => {
 
 router.get('/mis-reportes', verificarToken, async (req, res) => {
   try {
+    await prepararBaseDeDatos();
     const [rows] = await db.query(`
       SELECT r.id, r.descripcion, r.foto_url, r.direccion, r.estado, r.fecha_creacion,
-             r.latitud, r.longitud,
-             c.nombre AS categoria
+             r.latitud, r.longitud, r.categoria_otro,
+             c.nombre AS categoria,
+             (SELECT m.autor FROM mensajes_reporte m WHERE m.reporte_id = r.id ORDER BY m.id DESC LIMIT 1) AS ultimo_mensaje_autor,
+             (SELECT COUNT(*) FROM mensajes_reporte m2 WHERE m2.reporte_id = r.id) AS cantidad_mensajes
       FROM reportes r
       JOIN categorias c ON r.categoria_id = c.id
       WHERE r.usuario_id = ?
@@ -186,6 +201,75 @@ router.put('/reportes/:id/gestion', verificarToken, verificarAdmin, async (req, 
   }
 });
 
+async function reporteAccesible(req, idReporte) {
+  const [filas] = await db.query('SELECT usuario_id FROM reportes WHERE id = ?', [idReporte]);
+  if (filas.length === 0) return false;
+  return req.usuario.rol === 'admin' || filas[0].usuario_id === req.usuario.id;
+}
+
+router.get('/reportes/:id/mensajes', verificarToken, async (req, res) => {
+  try {
+    await prepararBaseDeDatos();
+    if (!(await reporteAccesible(req, req.params.id))) {
+      return res.status(404).json({ error: 'Reporte no encontrado' });
+    }
+    const [rows] = await db.query(
+      `SELECT id, autor, autor_nombre, texto, fecha
+       FROM mensajes_reporte
+       WHERE reporte_id = ?
+       ORDER BY id ASC`,
+      [req.params.id]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener los mensajes' });
+  }
+});
+
+router.post('/reportes/:id/mensajes', verificarToken, async (req, res) => {
+  try {
+    await prepararBaseDeDatos();
+    const { id } = req.params;
+    const texto = String(req.body.texto || '').trim().slice(0, 1000);
+    const esAdmin = req.usuario.rol === 'admin';
+
+    if (!texto) {
+      return res.status(400).json({ error: 'Escribí un mensaje primero' });
+    }
+    if (!(await reporteAccesible(req, id))) {
+      return res.status(404).json({ error: 'Reporte no encontrado' });
+    }
+
+    if (!esAdmin) {
+      const [pedidos] = await db.query(
+        "SELECT 1 FROM mensajes_reporte WHERE reporte_id = ? AND autor = 'admin' LIMIT 1",
+        [id]
+      );
+      if (pedidos.length === 0) {
+        return res.status(403).json({ error: 'Todavía no hay ninguna consulta para responder' });
+      }
+    }
+
+    await db.query(
+      'INSERT INTO mensajes_reporte (reporte_id, autor, autor_nombre, texto) VALUES (?, ?, ?, ?)',
+      [id, esAdmin ? 'admin' : 'vecino', req.usuario.nombre || null, texto]
+    );
+
+    await registrarHistorial([{
+      reporteId: id,
+      usuario: req.usuario.nombre,
+      accion: 'mensaje',
+      detalle: esAdmin ? 'Pidió más información al vecino' : 'El vecino respondió',
+    }]);
+
+    res.status(201).json({ mensaje: 'Mensaje enviado' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al enviar el mensaje' });
+  }
+});
+
 router.put('/reportes-lote', verificarToken, verificarAdmin, async (req, res) => {
   try {
     await prepararBaseDeDatos();
@@ -270,6 +354,7 @@ router.delete('/reportes/:id', verificarToken, verificarAdmin, async (req, res) 
     const { id } = req.params;
     await db.query('DELETE FROM reportes WHERE id = ?', [id]);
     await db.query('DELETE FROM historial_reportes WHERE reporte_id = ?', [id]).catch(() => {});
+    await db.query('DELETE FROM mensajes_reporte WHERE reporte_id = ?', [id]).catch(() => {});
     res.json({ mensaje: 'Reporte eliminado correctamente' });
   } catch (error) {
     console.error(error);
@@ -282,7 +367,9 @@ router.get('/admin/reportes', verificarToken, verificarAdmin, async (req, res) =
     await prepararBaseDeDatos();
     const [rows] = await db.query(`
       SELECT r.id, r.descripcion, r.foto_url, r.direccion, r.estado, r.fecha_creacion,
-             r.fecha_resolucion, r.responsable, r.notas_internas, r.latitud, r.longitud,
+             r.fecha_resolucion, r.responsable, r.notas_internas, r.latitud, r.longitud, r.categoria_otro,
+             (SELECT m.autor FROM mensajes_reporte m WHERE m.reporte_id = r.id ORDER BY m.id DESC LIMIT 1) AS ultimo_mensaje_autor,
+             (SELECT COUNT(*) FROM mensajes_reporte m2 WHERE m2.reporte_id = r.id) AS cantidad_mensajes,
              c.nombre AS categoria,
              u.nombre AS usuario_nombre, u.apellido AS usuario_apellido, u.dni AS usuario_dni
       FROM reportes r

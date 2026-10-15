@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/pages/VerReportesPage.css';
-import { iconoCategoria, colorCategoria } from '../utils/categorias';
+import { iconoCategoria, colorCategoria, etiquetaCategoria } from '../utils/categorias';
 import { MapPin, Calendar, Plus, X, RefreshCw } from 'lucide-react';
 import { ESTADOS_TEXTO } from '../utils/estados';
 import Spinner from '../components/Spinner';
@@ -179,7 +179,7 @@ function VerReportesPage() {
                   <div className="reporte-info">
                     <span className={`categoria-chip ${color}`}>
                       <Icono size={15} strokeWidth={2} aria-hidden="true" />
-                      {r.categoria}
+                      {etiquetaCategoria(r)}
                     </span>
                     <p className="reporte-descripcion">{r.descripcion}</p>
                     <p className="reporte-direccion">

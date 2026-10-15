@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { X, MapPin, Calendar, Check, ExternalLink, Trash2, Clock, Save, Copy, History } from 'lucide-react';
 import MapaVista from './MapaVista';
-import { iconoCategoria, colorCategoria } from '../utils/categorias';
+import ConversacionReporte from './ConversacionReporte';
+import { iconoCategoria, colorCategoria, etiquetaCategoria } from '../utils/categorias';
 import { ESTADOS_TEXTO, ESTADOS_ORDEN } from '../utils/estados';
 import { textoDistancia } from '../utils/duplicados';
 import { prioridadDe, PRIORIDAD_TEXTO, textoDuracion } from '../utils/prioridad';
@@ -13,7 +14,7 @@ const PASOS = [
   { estado: 'resuelto', texto: 'Resuelto' },
 ];
 
-function DetalleReporteModal({ reporte, onCerrar, admin = null }) {
+function DetalleReporteModal({ reporte, onCerrar, admin = null, esMio = false, onMensajeEnviado = null }) {
   const botonCerrar = useRef(null);
   const cerrarRef = useRef(onCerrar);
   const [responsable, setResponsable] = useState('');
@@ -27,6 +28,7 @@ function DetalleReporteModal({ reporte, onCerrar, admin = null }) {
   const responsableGuardado = reporte?.responsable || '';
   const notasGuardadas = reporte?.notas_internas || '';
   const estadoActual = reporte?.estado;
+  const cantidadMensajes = reporte?.cantidad_mensajes || 0;
   const cargarHistorial = admin?.cargarHistorial;
 
   useEffect(() => {
@@ -44,7 +46,7 @@ function DetalleReporteModal({ reporte, onCerrar, admin = null }) {
       .then((filas) => { if (vigente) setHistorial(filas); })
       .catch(() => { if (vigente) setHistorial([]); });
     return () => { vigente = false; };
-  }, [abierto, idReporte, estadoActual, responsableGuardado, notasGuardadas]);
+  }, [abierto, idReporte, estadoActual, responsableGuardado, notasGuardadas, cantidadMensajes]);
 
   useEffect(() => {
     if (!abierto) return undefined;
@@ -116,7 +118,7 @@ function DetalleReporteModal({ reporte, onCerrar, admin = null }) {
           <div className="detalle-header">
             <span className={`categoria-chip ${color}`}>
               <Icono size={15} strokeWidth={2} aria-hidden="true" />
-              {reporte.categoria}
+              {etiquetaCategoria(reporte)}
             </span>
             <div className="detalle-etiquetas">
               {prioridad && (
@@ -208,6 +210,14 @@ function DetalleReporteModal({ reporte, onCerrar, admin = null }) {
                 </button>
               </div>
             </div>
+          )}
+
+          {(admin || esMio) && (
+            <ConversacionReporte
+              reporteId={reporte.id}
+              modo={admin ? 'admin' : 'vecino'}
+              onCambio={admin ? admin.onMensajeEnviado : onMensajeEnviado}
+            />
           )}
 
           {admin && admin.repetidos.length > 0 && (

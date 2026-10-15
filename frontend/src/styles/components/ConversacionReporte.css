@@ -1,0 +1,152 @@
+.conversacion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  background-color: #eef6f7;
+  border: 1px solid #c4e2e6;
+}
+
+.conversacion h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-primario-oscuro);
+}
+
+.conversacion-vacia {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-texto-suave);
+}
+
+.conversacion-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mensaje {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 92%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background-color: white;
+  border: 1px solid #e4e0d3;
+}
+
+.mensaje p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: var(--color-texto);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.mensaje-municipio {
+  align-self: flex-start;
+}
+
+.mensaje-vecino {
+  align-self: flex-end;
+  background-color: #fff3c4;
+  border-color: #f0dfa6;
+}
+
+.mensaje-autor {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-primario-oscuro);
+}
+
+.mensaje-fecha {
+  font-size: 0.75rem;
+  color: var(--color-texto-suave);
+}
+
+.conversacion-etiqueta {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-texto);
+}
+
+.conversacion-sugerencias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.conversacion-sugerencias button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid #b9ccd0;
+  border-radius: 18px;
+  background-color: white;
+  color: var(--color-primario-oscuro);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.conversacion-sugerencias button:hover {
+  border-color: var(--color-primario);
+}
+
+.conversacion textarea {
+  padding: 12px;
+  border: 2px solid var(--color-borde);
+  border-radius: 12px;
+  background-color: white;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--color-texto);
+  resize: vertical;
+  min-height: 84px;
+}
+
+.conversacion textarea:focus {
+  outline: none;
+  border-color: var(--color-primario);
+}
+
+.conversacion-error {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #b3261e;
+}
+
+.conversacion-enviar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  border: 0;
+  border-radius: 12px;
+  background-color: var(--color-primario);
+  color: white;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.conversacion-enviar:hover:not(:disabled) {
+  background-color: var(--color-primario-oscuro);
+}
+
+.conversacion-enviar:disabled {
+  background-color: #8a9a9d;
+  cursor: not-allowed;
+}

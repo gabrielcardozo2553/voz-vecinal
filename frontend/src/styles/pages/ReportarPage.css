@@ -562,3 +562,58 @@
   font-weight: 600;
   color: var(--color-primario);
 }
+
+.exito-corazon {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 12px;
+  border-radius: 50%;
+  background-color: #fbe3d6;
+  color: #c2410c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exito-seguimiento {
+  margin: 0 0 8px;
+  color: var(--color-texto-suave);
+  font-size: 0.95rem;
+}
+
+.campo-otros {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 14px;
+  background-color: #f1efe6;
+}
+
+.campo-otros label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-texto);
+}
+
+.campo-otros input {
+  min-height: 48px;
+  padding: 0 12px;
+  border: 2px solid var(--color-borde);
+  border-radius: 12px;
+  background-color: white;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--color-texto);
+}
+
+.campo-otros input:focus {
+  outline: none;
+  border-color: var(--color-primario);
+}
+
+.campo-otros-ayuda {
+  font-size: 0.82rem;
+  color: var(--color-texto-suave);
+}

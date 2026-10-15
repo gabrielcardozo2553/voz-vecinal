@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Home, LogIn } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
@@ -13,6 +13,16 @@ import AdminPage from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
 import RutaProtegida from './components/RutaProtegida';
 import BottomNav from './components/layout/BottomNav';
+
+function VolverArriba() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 });
+  }, [pathname]);
+
+  return null;
+}
 
 function ControlDeSesion() {
   const { logout } = useAuth();
@@ -39,6 +49,7 @@ function App() {
   return (
     <BrowserRouter>
       <ControlDeSesion />
+      <VolverArriba />
       <Header />
       <Routes>
         <Route path="/" element={<ReportarPage />} />

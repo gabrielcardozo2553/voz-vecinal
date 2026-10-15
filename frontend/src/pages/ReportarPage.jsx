@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/pages/ReportarPage.css';
 import { useAuth } from '../context/AuthContext';
-import { Send, Check, CheckCircle, LocateFixed, Camera, ImageIcon, X, MapPin, Lightbulb, Plus, ShieldCheck } from 'lucide-react';
-import { iconoCategoria, colorCategoria } from '../utils/categorias';
+import { Send, Check, Heart, LocateFixed, Camera, ImageIcon, X, MapPin, Lightbulb, Plus, ShieldCheck } from 'lucide-react';
+import { iconoCategoria, colorCategoria, esCategoriaOtros } from '../utils/categorias';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
 import SelectorUbicacion from '../components/SelectorUbicacion';
@@ -18,6 +18,7 @@ const FRASES_RAPIDAS = ['Hace varios días', 'Es peligroso', 'Afecta a varias ca
 
 const FORMULARIO_VACIO = {
   categoria_id: '',
+  categoria_otro: '',
   descripcion: '',
   direccion: '',
 };
@@ -39,6 +40,10 @@ function ReportarPage() {
   const [mensaje, setMensaje] = useState('');
 
   useEffect(() => {
+    if (enviado) window.scrollTo({ top: 0 });
+  }, [enviado]);
+
+  useEffect(() => {
     axios.get('/api/categorias')
       .then(res => setCategorias(res.data))
       .catch(err => console.error(err));
@@ -47,6 +52,9 @@ function ReportarPage() {
   if (!usuario) {
     return <p>Tenés que <a href="/login">iniciar sesión</a> para reportar un problema.</p>;
   }
+
+  const categoriaElegida = categorias.find(cat => cat.id === formData.categoria_id);
+  const eligioOtros = Boolean(categoriaElegida) && esCategoriaOtros(categoriaElegida.nombre);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -136,6 +144,12 @@ function ReportarPage() {
       return;
     }
 
+    if (eligioOtros && formData.categoria_otro.trim().length < 3) {
+      setMensaje('Contanos de qué se trata el problema en el campo de “Otros”.');
+      document.getElementById('categoria_otro')?.focus();
+      return;
+    }
+
     if (!foto) {
       setMensaje('Por favor, adjuntá una foto del problema.');
       return;
@@ -146,6 +160,7 @@ function ReportarPage() {
 
     const data = new FormData();
     data.append('categoria_id', formData.categoria_id);
+    if (eligioOtros) data.append('categoria_otro', formData.categoria_otro.trim());
     data.append('descripcion', formData.descripcion);
     data.append('direccion', formData.direccion);
     data.append('usuario_id', usuario.id);
@@ -176,10 +191,15 @@ function ReportarPage() {
   if (enviado) {
     return (
       <div className="reportar-page reportar-exito" role="status">
-        <CheckCircle className="exito-icono" size={56} strokeWidth={1.6} aria-hidden="true" />
-        <h2>¡Reporte enviado!</h2>
+        <span className="exito-corazon" aria-hidden="true">
+          <Heart size={34} strokeWidth={1.8} />
+        </span>
+        <h2>¡Gracias por colaborar, {usuario.nombre}!</h2>
         <p className="reportar-subtitulo">
-          Le llegó a la Municipalidad. Podés seguir cómo avanza desde “Mis reportes”.
+          Tu reporte ya le llegó a la Municipalidad. Cuidar el pueblo es cosa de todos, y vecinos como vos ayudan a que mejore cada día.
+        </p>
+        <p className="exito-seguimiento">
+          Podés seguir cómo avanza desde “Mis reportes”.
         </p>
         <div className="exito-acciones">
           <Link to="/mis-reportes" className="boton-principal">Ver mis reportes</Link>
@@ -245,6 +265,21 @@ function ReportarPage() {
               );
             })}
           </div>
+          {eligioOtros && (
+            <div className="campo-otros">
+              <label htmlFor="categoria_otro">¿De qué se trata?</label>
+              <input
+                id="categoria_otro"
+                type="text"
+                name="categoria_otro"
+                value={formData.categoria_otro}
+                maxLength={100}
+                placeholder="Ej: cartel caído, pozo de agua, ruidos molestos"
+                onChange={handleChange}
+              />
+              <span className="campo-otros-ayuda">Dos o tres palabras alcanzan. Después podés explicarlo mejor en la descripción.</span>
+            </div>
+          )}
         </section>
 
         <section className="reportar-paso">

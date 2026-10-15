@@ -38,3 +38,13 @@ export function colorCategoria(nombre) {
   if (n.includes('vandal')) return 'color-violeta';
   return 'color-gris';
 }
+export function esCategoriaOtros(nombre) {
+  return String(nombre || '').trim().toLowerCase() === 'otros';
+}
+
+export function etiquetaCategoria(reporte) {
+  if (esCategoriaOtros(reporte.categoria) && reporte.categoria_otro) {
+    return `Otros: ${reporte.categoria_otro}`;
+  }
+  return reporte.categoria;
+}

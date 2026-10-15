@@ -126,3 +126,17 @@
     padding: 10px 12px;
   }
 }
+
+.aviso-consulta {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 10px;
+  background-color: #fff1cc;
+  color: #6b4a00;
+  font-size: 0.8rem;
+  font-weight: 600;
+}

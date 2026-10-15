@@ -25,6 +25,23 @@ function prepararBaseDeDatos() {
       await agregarColumnaSiFalta('reportes', 'fecha_resolucion', 'DATETIME NULL');
       await agregarColumnaSiFalta('reportes', 'responsable', 'VARCHAR(100) NULL');
       await agregarColumnaSiFalta('reportes', 'notas_internas', 'TEXT NULL');
+      await agregarColumnaSiFalta('reportes', 'categoria_otro', 'VARCHAR(100) NULL');
+      await db.query(`
+        INSERT INTO categorias (nombre)
+        SELECT 'Otros' FROM DUAL
+        WHERE NOT EXISTS (SELECT 1 FROM categorias WHERE nombre = 'Otros')
+      `);
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS mensajes_reporte (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          reporte_id INT NOT NULL,
+          autor VARCHAR(10) NOT NULL,
+          autor_nombre VARCHAR(100) NULL,
+          texto TEXT NOT NULL,
+          fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_mensajes_reporte (reporte_id)
+        )
+      `);
       await db.query(`
         CREATE TABLE IF NOT EXISTS historial_reportes (
           id INT AUTO_INCREMENT PRIMARY KEY,
