@@ -144,6 +144,12 @@
   gap: 10px;
 }
 
+.categoria-boton:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: calc(50% - 5px);
+}
+
 .categoria-boton {
   position: relative;
   display: flex;
