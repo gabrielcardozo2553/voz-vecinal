@@ -214,7 +214,7 @@ router.get('/reportes/:id/mensajes', verificarToken, async (req, res) => {
       return res.status(404).json({ error: 'Reporte no encontrado' });
     }
     const [rows] = await db.query(
-      `SELECT id, autor, autor_nombre, texto, fecha
+      `SELECT id, autor, autor_nombre, texto, foto_url, fecha
        FROM mensajes_reporte
        WHERE reporte_id = ?
        ORDER BY id ASC`,
@@ -227,15 +227,28 @@ router.get('/reportes/:id/mensajes', verificarToken, async (req, res) => {
   }
 });
 
-router.post('/reportes/:id/mensajes', verificarToken, async (req, res) => {
+router.post('/reportes/:id/mensajes', verificarToken, (req, res, next) => {
+  upload.single('foto')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'La foto no puede pesar más de 5MB' });
+      }
+      return res.status(400).json({ error: 'Error al subir la foto' });
+    }
+    next();
+  });
+}, async (req, res) => {
   try {
     await prepararBaseDeDatos();
     const { id } = req.params;
     const texto = String(req.body.texto || '').trim().slice(0, 1000);
     const esAdmin = req.usuario.rol === 'admin';
 
-    if (!texto) {
-      return res.status(400).json({ error: 'Escribí un mensaje primero' });
+    if (req.file && !String(req.file.mimetype).startsWith('image/')) {
+      return res.status(400).json({ error: 'El archivo tiene que ser una imagen' });
+    }
+    if (!texto && !req.file) {
+      return res.status(400).json({ error: 'Escribí un mensaje o adjuntá una foto' });
     }
     if (!(await reporteAccesible(req, id))) {
       return res.status(404).json({ error: 'Reporte no encontrado' });
@@ -251,16 +264,20 @@ router.post('/reportes/:id/mensajes', verificarToken, async (req, res) => {
       }
     }
 
+    const fotoUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
     await db.query(
-      'INSERT INTO mensajes_reporte (reporte_id, autor, autor_nombre, texto) VALUES (?, ?, ?, ?)',
-      [id, esAdmin ? 'admin' : 'vecino', req.usuario.nombre || null, texto]
+      'INSERT INTO mensajes_reporte (reporte_id, autor, autor_nombre, texto, foto_url) VALUES (?, ?, ?, ?, ?)',
+      [id, esAdmin ? 'admin' : 'vecino', req.usuario.nombre || null, texto, fotoUrl]
     );
 
     await registrarHistorial([{
       reporteId: id,
       usuario: req.usuario.nombre,
       accion: 'mensaje',
-      detalle: esAdmin ? 'Pidió más información al vecino' : 'El vecino respondió',
+      detalle: esAdmin
+        ? 'Pidió más información al vecino'
+        : (fotoUrl ? 'El vecino respondió con una foto' : 'El vecino respondió'),
     }]);
 
     res.status(201).json({ mensaje: 'Mensaje enviado' });

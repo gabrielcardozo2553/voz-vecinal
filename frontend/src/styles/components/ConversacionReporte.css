@@ -150,3 +150,71 @@
   background-color: #8a9a9d;
   cursor: not-allowed;
 }
+
+.mensaje-foto {
+  display: block;
+  margin-top: 4px;
+}
+
+.mensaje-foto img {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.conversacion-fotos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.conversacion-foto-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #b9ccd0;
+  border-radius: 12px;
+  background-color: white;
+  color: var(--color-primario-oscuro);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.conversacion-foto-boton:hover {
+  border-color: var(--color-primario);
+}
+
+.conversacion-vista {
+  position: relative;
+  align-self: flex-start;
+}
+
+.conversacion-vista img {
+  display: block;
+  max-width: 200px;
+  max-height: 180px;
+  border-radius: 10px;
+  border: 1px solid var(--color-borde);
+}
+
+.conversacion-vista button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.65);
+  color: white;
+  cursor: pointer;
+}

@@ -42,6 +42,7 @@ function prepararBaseDeDatos() {
           INDEX idx_mensajes_reporte (reporte_id)
         )
       `);
+      await agregarColumnaSiFalta('mensajes_reporte', 'foto_url', 'VARCHAR(255) NULL');
       await db.query(`
         CREATE TABLE IF NOT EXISTS historial_reportes (
           id INT AUTO_INCREMENT PRIMARY KEY,
