@@ -84,7 +84,7 @@ function ReportarPage() {
       },
       () => {
         setBuscandoUbicacion(false);
-        mostrarToast('No pudimos obtener tu ubicación. Podés marcarla en el mapa.', 'error');
+        mostrarToast('No pudimos obtener tu ubicación. Puedes marcarla en el mapa.', 'error');
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -287,7 +287,7 @@ function ReportarPage() {
             <span className="paso-numero">2</span>
             <div>
               <h3>¿Dónde está?</h3>
-              <p className="paso-sub">Usá tu ubicación o marcalo en el mapa</p>
+              <p className="paso-sub">Usa tu ubicación o márcalo en el mapa</p>
             </div>
           </div>
           <button
@@ -309,7 +309,7 @@ function ReportarPage() {
               <span className="mapa-chip"><span className="mapa-chip-punto" />Punto marcado</span>
             )}
           </div>
-          <p className="ayuda-campo">Si querés, tocá el mapa para marcar el punto exacto.</p>
+          <p className="ayuda-campo">Aquí puedes tocar el mapa para marcar el punto exacto.</p>
           <div className="campo">
             <label htmlFor="direccion">Dirección o referencia</label>
             <div className="input-con-icono">
