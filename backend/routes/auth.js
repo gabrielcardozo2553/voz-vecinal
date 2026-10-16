@@ -21,7 +21,7 @@ router.post('/registro', async (req, res) => {
 
     
     if (aceptaTerminos !== true) {
-      return res.status(400).json({ error: 'Tenés que aceptar el uso de tus datos para registrarte' });
+      return res.status(400).json({ error: 'Tienes que aceptar el uso de tus datos para registrarte' });
     }
 
     const [existentesEmail] = await db.query('SELECT id FROM usuarios WHERE email = ?', [email]);

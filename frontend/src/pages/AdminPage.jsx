@@ -317,7 +317,7 @@ function AdminPage() {
     <div className="admin-page">
       <div className="admin-cabecera">
         <h2>Panel de administración</h2>
-        <p className="admin-subtitulo">Revisá los reportes de los vecinos y actualizá cómo avanzan.</p>
+        <p className="admin-subtitulo">Revisa los reportes de los vecinos y actualizá cómo avanzan.</p>
       </div>
 
       <div className="resumen-estados" role="group" aria-label="Filtrar por estado">
@@ -711,7 +711,7 @@ function AdminPage() {
           >
             <span className="confirmar-icono" aria-hidden="true"><Trash2 size={24} /></span>
             <p className="confirmar-texto">
-              ¿Seguro que querés eliminar este reporte de <strong>{reporteAEliminar.categoria}</strong>?
+              ¿Seguro que quieres eliminar este reporte de <strong>{reporteAEliminar.categoria}</strong>?
             </p>
             <p className="confirmar-aviso">Esta acción no se puede deshacer.</p>
             <div className="confirmar-botones">

@@ -15,16 +15,16 @@ function validarCampo(nombre, valor, esRegistro) {
   switch (nombre) {
     case 'nombre':
     case 'apellido':
-      if (!texto) return nombre === 'nombre' ? 'Ingresá tu nombre.' : 'Ingresá tu apellido.';
-      if (texto.length < 2 || !SOLO_LETRAS.test(texto)) return 'Usá solo letras.';
+      if (!texto) return nombre === 'nombre' ? 'Ingresa tu nombre.' : 'Ingresa tu apellido.';
+      if (texto.length < 2 || !SOLO_LETRAS.test(texto)) return 'Usa solo letras.';
       return '';
     case 'dni':
       return /^\d{7,8}$/.test(valor) ? '' : 'El DNI debe tener 7 u 8 números.';
     case 'email':
-      if (!texto) return 'Ingresá tu email.';
-      return EMAIL_VALIDO.test(texto) ? '' : 'Ingresá un email válido.';
+      if (!texto) return 'Ingresa tu email.';
+      return EMAIL_VALIDO.test(texto) ? '' : 'Ingresa un email válido.';
     case 'password':
-      if (!valor) return 'Ingresá tu contraseña.';
+      if (!valor) return 'Ingresa tu contraseña.';
       if (esRegistro && valor.length < MINIMO_PASSWORD) return `Mínimo ${MINIMO_PASSWORD} caracteres.`;
       return '';
     default:
@@ -111,14 +111,14 @@ function LoginPage() {
     const primerError = modo === 'registro' ? camposDelModo.find((campo) => errores[campo]) : null;
     if (primerError) {
       setTocados(Object.fromEntries(camposDelModo.map((campo) => [campo, true])));
-      setMensaje('Revisá los campos marcados en rojo.');
+      setMensaje('Revisa los campos marcados en rojo.');
       document.getElementById(primerError)?.focus();
       return;
     }
 
     if (modo === 'registro') {
       if (!aceptaTerminos) {
-        setMensaje('Tenés que aceptar el uso de tus datos para registrarte.');
+        setMensaje('Tienes que aceptar el uso de tus datos para registrarte.');
         return;
       }
     }
@@ -128,7 +128,7 @@ function LoginPage() {
     try {
       if (modo === 'registro') {
         await axios.post('/api/auth/registro', { ...formData, aceptaTerminos });
-        setMensaje('¡Registro exitoso! Ahora podés iniciar sesión.');
+        setMensaje('¡Registro exitoso! Ahora puedes iniciar sesión.');
         setMensajeExito(true);
         setFormData({ ...formData, password: '' });
         setAceptaTerminos(false);
@@ -160,7 +160,7 @@ function LoginPage() {
         <h2>{esRegistro ? 'Creá tu cuenta' : 'Bienvenido a Voz Vecinal'}</h2>
         <p className="login-subtitulo">
           {esRegistro
-            ? 'Con tu cuenta podés reportar problemas y seguir cómo avanzan.'
+            ? 'Con tu cuenta puedes reportar problemas y seguir cómo avanzan.'
             : 'Tu barrio, a un reporte de distancia.'}
         </p>
       </div>

@@ -55,7 +55,7 @@ function MisReportesPage() {
       <div className="mis-reportes-cabecera">
         <h2>Mis reportes</h2>
         <p className="mis-reportes-subtitulo">
-          Estos son los problemas que reportaste vos. Tocá uno para ver el detalle completo.
+          Estos son los problemas que reportaste tú. Toca uno para ver el detalle completo.
         </p>
       </div>
 
@@ -80,7 +80,7 @@ function MisReportesPage() {
         <div className="estado-vacio estado-vacio-cta">
           <Inbox size={44} strokeWidth={1.5} aria-hidden="true" />
           <p>Todavía no hiciste ningún reporte.</p>
-          <span>Cuando reportes un problema, va a aparecer acá y vas a poder seguir cómo avanza.</span>
+          <span>Cuando reportes un problema, va a aparecer aquí y vas a poder seguir cómo avanza.</span>
           <Link to="/" className="boton-principal-link">
             <Plus size={20} aria-hidden="true" />
             Hacer mi primer reporte

@@ -10,8 +10,8 @@ function RutaProtegida({ children, soloAdmin = false }) {
     return (
       <PantallaEstado
         tipo="sesion"
-        titulo="Ingresá para continuar"
-        texto="Esta página es para vecinos con cuenta. Ingresá o creá la tuya en un minuto."
+        titulo="Ingresa para continuar"
+        texto="Esta página es para vecinos con cuenta. Ingresa o crea la tuya en un minuto."
       >
         <Link to="/login" className="pantalla-boton">
           <LogIn size={18} aria-hidden="true" />

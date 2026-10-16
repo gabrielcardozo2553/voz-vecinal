@@ -5,7 +5,7 @@ import { comprimirImagen } from '../utils/imagen';
 import '../styles/components/ConversacionReporte.css';
 
 const SUGERENCIAS = [
-  '¿Podés agregar una foto más clara?',
+  '¿Puedes agregar una foto más clara?',
   '¿Entre qué calles queda exactamente?',
   '¿Hace cuánto tiempo pasa esto?',
 ];
@@ -59,7 +59,7 @@ function ConversacionReporte({ reporteId, modo, onCambio }) {
     try {
       const comprimida = await comprimirImagen(archivo);
       if (comprimida.size > 5 * 1024 * 1024) {
-        setError('La foto es muy pesada. Probá con otra.');
+        setError('La foto es muy pesada. Prueba con otra.');
       } else {
         setVistaFoto((previa) => {
           if (previa) URL.revokeObjectURL(previa);
@@ -68,7 +68,7 @@ function ConversacionReporte({ reporteId, modo, onCambio }) {
         setFoto(comprimida);
       }
     } catch {
-      setError('No se pudo leer esa foto. Probá con otra.');
+      setError('No se pudo leer esa foto. Prueba con otra.');
     } finally {
       setProcesando(false);
       e.target.value = '';
@@ -77,7 +77,7 @@ function ConversacionReporte({ reporteId, modo, onCambio }) {
 
   const enviar = async () => {
     if (!texto.trim() && !foto) {
-      setError('Escribí un mensaje o adjuntá una foto.');
+      setError('Escribe un mensaje o adjunta una foto.');
       return;
     }
     setEnviando(true);
@@ -94,7 +94,7 @@ function ConversacionReporte({ reporteId, modo, onCambio }) {
       await cargar();
       if (onCambio) onCambio();
     } catch (err) {
-      setError(err.response?.data?.error || 'No se pudo enviar el mensaje. Probá de nuevo.');
+      setError(err.response?.data?.error || 'No se pudo enviar el mensaje. Prueba de nuevo.');
     } finally {
       setEnviando(false);
     }
@@ -124,7 +124,7 @@ function ConversacionReporte({ reporteId, modo, onCambio }) {
 
       {mensajes.length === 0 ? (
         <p className="conversacion-vacia">
-          Si el reporte no quedó claro, pedile al vecino más detalles. Le va a aparecer en “Mis reportes”.
+          Si el reporte no quedó claro, pídele al vecino más detalles. Le aparecerá en “Mis reportes”.
         </p>
       ) : (
         <ul className="conversacion-lista">
@@ -164,7 +164,7 @@ function ConversacionReporte({ reporteId, modo, onCambio }) {
         value={texto}
         rows={3}
         maxLength={1000}
-        placeholder={esAdmin ? 'Escribile al vecino qué necesitás saber' : 'Escribí tu respuesta'}
+        placeholder={esAdmin ? 'Escríbele al vecino qué necesitas saber' : 'Escribe tu respuesta'}
         onChange={(e) => { setTexto(e.target.value); setError(''); }}
       />
       {vistaFoto && (

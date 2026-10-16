@@ -248,7 +248,7 @@ router.post('/reportes/:id/mensajes', verificarToken, (req, res, next) => {
       return res.status(400).json({ error: 'El archivo tiene que ser una imagen' });
     }
     if (!texto && !req.file) {
-      return res.status(400).json({ error: 'Escribí un mensaje o adjuntá una foto' });
+      return res.status(400).json({ error: 'Escribe un mensaje o adjunta una foto' });
     }
     if (!(await reporteAccesible(req, id))) {
       return res.status(404).json({ error: 'Reporte no encontrado' });

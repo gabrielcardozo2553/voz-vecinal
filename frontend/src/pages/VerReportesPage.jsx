@@ -78,7 +78,7 @@ function VerReportesPage() {
       <div className="ver-reportes-cabecera">
         <h2>Reportes del pueblo</h2>
         <p className="ver-reportes-subtitulo">
-          Mirá los problemas que reportaron tus vecinos y cómo va su resolución.
+          Mira los problemas que reportaron tus vecinos y cómo va su resolución.
         </p>
       </div>
 
@@ -125,14 +125,14 @@ function VerReportesPage() {
 
       {reportesFiltrados.length === 0 ? (
         reportes.length === 0 ? (
-          <PantallaEstado tipo="vacio" texto="Cuando los vecinos reporten problemas, los vas a ver acá. Podés ser el primero.">
+          <PantallaEstado tipo="vacio" texto="Cuando los vecinos reporten problemas, los verás aquí. Puedes ser el primero.">
             <Link to="/" className="pantalla-boton">
               <Plus size={18} aria-hidden="true" />
               Hacer un reporte
             </Link>
           </PantallaEstado>
         ) : (
-          <PantallaEstado tipo="sinResultados" texto="No hay reportes con ese filtro. Probá con otro estado o mes.">
+          <PantallaEstado tipo="sinResultados" texto="No hay reportes con ese filtro. Prueba con otro estado o mes.">
             <button
               type="button"
               className="pantalla-boton pantalla-boton-suave"

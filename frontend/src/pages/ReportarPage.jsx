@@ -50,7 +50,7 @@ function ReportarPage() {
   }, []);
 
   if (!usuario) {
-    return <p>Tenés que <a href="/login">iniciar sesión</a> para reportar un problema.</p>;
+    return <p>Tienes que <a href="/login">iniciar sesión</a> para reportar un problema.</p>;
   }
 
   const categoriaElegida = categorias.find(cat => cat.id === formData.categoria_id);
@@ -111,7 +111,7 @@ function ReportarPage() {
 
     const tamanoMB = resultado.size / (1024 * 1024);
     if (tamanoMB > TAMANO_MAXIMO_MB) {
-      setMensajeFoto(`La foto pesa ${tamanoMB.toFixed(1)}MB y el máximo es ${TAMANO_MAXIMO_MB}MB. Probá con otra.`);
+      setMensajeFoto(`La foto pesa ${tamanoMB.toFixed(1)}MB y el máximo es ${TAMANO_MAXIMO_MB}MB. Prueba con otra.`);
       return;
     }
 
@@ -140,7 +140,7 @@ function ReportarPage() {
     e.preventDefault();
 
     if (!formData.categoria_id) {
-      setMensaje('Por favor, elegí una categoría.');
+      setMensaje('Por favor, elige una categoría.');
       return;
     }
 
@@ -151,7 +151,7 @@ function ReportarPage() {
     }
 
     if (!foto) {
-      setMensaje('Por favor, adjuntá una foto del problema.');
+      setMensaje('Por favor, adjunta una foto del problema.');
       return;
     }
 
@@ -182,7 +182,7 @@ function ReportarPage() {
       setEnviado(true);
     } catch (error) {
       console.error(error);
-      mostrarToast('Hubo un error al enviar el reporte. Probá de nuevo.', 'error');
+      mostrarToast('Hubo un error al enviar el reporte. Prueba de nuevo.', 'error');
     } finally {
       setEnviando(false);
     }
@@ -196,10 +196,10 @@ function ReportarPage() {
         </span>
         <h2>¡Gracias por colaborar, {usuario.nombre}!</h2>
         <p className="reportar-subtitulo">
-          Tu reporte ya le llegó a la Municipalidad. Cuidar el pueblo es cosa de todos, y vecinos como vos ayudan a que mejore cada día.
+          Tu reporte ya le llegó a la Municipalidad. Cuidar el pueblo es cosa de todos, y vecinos como tú ayudan a que mejore cada día.
         </p>
         <p className="exito-seguimiento">
-          Podés seguir cómo avanza desde “Mis reportes”.
+          Puedes seguir cómo avanza desde “Mis reportes”.
         </p>
         <div className="exito-acciones">
           <Link to="/mis-reportes" className="boton-principal">Ver mis reportes</Link>
@@ -235,7 +235,7 @@ function ReportarPage() {
             <span className="paso-numero">1</span>
             <div>
               <h3>¿Qué tipo de problema es?</h3>
-              <p className="paso-sub">Elegí uno</p>
+              <p className="paso-sub">Elige uno</p>
             </div>
           </div>
           <div className="categoria-grid">
@@ -277,7 +277,7 @@ function ReportarPage() {
                 placeholder="Ej: cartel caído, pozo de agua, ruidos molestos"
                 onChange={handleChange}
               />
-              <span className="campo-otros-ayuda">Dos o tres palabras alcanzan. Después podés explicarlo mejor en la descripción.</span>
+              <span className="campo-otros-ayuda">Dos o tres palabras alcanzan. Después puedes explicarlo mejor en la descripción.</span>
             </div>
           )}
         </section>
@@ -394,7 +394,7 @@ function ReportarPage() {
               name="descripcion"
               value={formData.descripcion}
               onChange={handleChange}
-              placeholder="Contá qué viste y desde cuándo pasa"
+              placeholder="Cuenta qué viste y desde cuándo pasa"
               maxLength={MAX_DESCRIPCION}
               required
             />
@@ -423,7 +423,7 @@ function ReportarPage() {
             </button>
             <p className="ayuda-campo ayuda-centrada ayuda-icono">
               <ShieldCheck size={18} aria-hidden="true" />
-              Te avisamos acá cuando la Municipalidad lo reciba y cuando lo resuelva.
+              Te avisamos aquí cuando la Municipalidad lo reciba y cuando lo resuelva.
             </p>
           </div>
         </section>
